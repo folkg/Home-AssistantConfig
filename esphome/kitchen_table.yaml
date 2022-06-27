@@ -1,0 +1,64 @@
+substitutions:
+  device_name: kitchen_table
+  friendly_name: Kitchen Table
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+# Make sure logging is not using the serial port
+logger:
+  baud_rate: 0
+
+ota:
+
+api:
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+#ip address
+#text_sensor:
+#  - platform: wifi_info
+#    ip_address:
+#      name: ${device_name}_wifi
+
+# https://beta.esphome.io/components/light/tuya.html
+# Set up the UART bus using pins 13 and 15
+uart:
+  rx_pin: GPIO13
+  tx_pin: GPIO15
+  baud_rate: 9600
+
+tuya:
+#Check logs to determine datapoints
+#Datapoint x: int value = dimmer_datapoint: x
+#Datapoint y: switch = switch_datapoint: y
+
+# Create a light using the dimmer, get datapoints from logs first
+light:
+  - platform: "tuya"
+    name: ${friendly_name}
+    dimmer_datapoint: 3
+    switch_datapoint: 1
+    min_value: 25 #experimental

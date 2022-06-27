@@ -5,14 +5,9 @@
 !*.yaml
 !.gitignore
 !*.md
-!.esphome
+!esphome
 
-# Ignore folders.
-.storage
-.cloud
-.google.token
-
-# Ensure these YAML files are ignored, they contain sensitive data/credentials.
+# Explicitly ensure these YAML files are ignored, they contain sensitive data/credentials.
 ip_bans.yaml
 secrets.yaml
 known_devices.yaml

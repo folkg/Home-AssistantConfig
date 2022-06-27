@@ -1,0 +1,6 @@
+substitutions:
+  device_name: ensuite_bath_light
+  friendly_name: Ensuite Bath Light
+  friendly_room_name: Ensuite Bath
+
+<<: !include kuled_k36_with_nightlight.yaml

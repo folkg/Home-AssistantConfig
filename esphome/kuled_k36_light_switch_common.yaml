@@ -1,0 +1,113 @@
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s 
+  
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+ota:
+
+# Enable Home Assistant API
+api:
+  services:
+    - service: led_blink #will be prefaced with device_name in HA
+      then:
+        #Blink the green LED twice 
+        - switch.toggle: green_led
+        - delay: 150ms
+        - switch.toggle: green_led
+        - delay: 150ms
+        - switch.toggle: green_led
+        - delay: 150ms
+        - switch.toggle: green_led
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s 
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+#ip address
+#text_sensor:
+#  - platform: wifi_info
+#    ip_address:
+#      name: ${device_name}_wifi
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+#    on_press:
+#      - switch.toggle: relay
+    on_multi_click:
+    - timing:
+       - ON for 50ms to 699ms
+      then:
+        - homeassistant.event:
+            event: esphome.${device_name}_single
+        - switch.toggle: relay
+      invalid_cooldown: 300ms
+    - timing:
+      - ON for at least 700ms
+      then:
+        - homeassistant.event:
+            event: esphome.${device_name}_long
+    - timing:
+      - ON for at least 8000ms
+      then:
+        - switch.turn_on: restart_switch
+
+switch:
+  - platform: gpio
+    pin: GPIO12
+    name: ${friendly_name}
+    id: relay
+    on_turn_on:
+      - switch.turn_on: green_led # status light mode
+#      - switch.turn_off: green_led # night light mode
+    on_turn_off:
+      - switch.turn_off: green_led # status light mode
+#      - switch.turn_on: green_led # night light mode
+
+  - platform: gpio
+    id: green_led
+    pin:
+      number: GPIO13
+      inverted: true
+#    #Use restore_mode: RESTORE_DEFAULT_ON for night light
+#    restore_mode: RESTORE_DEFAULT_ON
+
+    #Switch to reboot the device
+  - platform: restart
+    id: restart_switch
+    name: ${friendly_name} Reboot
+
+#status_led conflicts with led output
+#status_led:
+#  pin:
+#    number: GPIO13
+#    inverted: true

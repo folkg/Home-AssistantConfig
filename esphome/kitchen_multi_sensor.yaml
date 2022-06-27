@@ -1,0 +1,117 @@
+# ##################################
+# NodeMCU v3 with BH1750 Lux, DHT22 Temp/Humidity, AM312 PIR Motion
+# ##################################
+# NodeMCU 'D1' --> BH-1750 'SCL'
+# NodeMCU 'D2' --> BH-1750 'SDA'
+# NodeMCU '3V' --> BH-1750 'VCC'
+# NodeMCU 'G' --> BH-1750 'GND'
+#
+# NodeMCU 'D7' --> DHT22 'out'
+# NodeMCU '3V' --> DHT22 '+'
+# NodeMCU 'G' --> DHT22 '-'
+#
+# NodeMCU 'D5' --> AM312 'signal'
+# NodeMCU 'VV' (5V) --> AM312 'VCC'
+# NodeMCU 'G' --> AM312 'GND'
+# ##################################
+# https://docs.zerynth.com/latest/_images/nodemcu3_comm.jpg
+# https://www.iot-kit.nl/docs/sensor-bh1750/
+# ##################################
+
+substitutions:
+  room_name: kitchen
+  friendly_room_name: Kitchen
+  sensor_update_interval: 15s
+  updates_per_message: "8"
+  
+esphome:
+  name: ${room_name}_multi_sensor
+  platform: ESP8266
+  board: nodemcuv2
+  
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_room_name} Multisensor
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+logger:
+
+ota:
+
+api:
+
+# The BH1750 sensor is an I2C sensor, so first prepare the 
+# controller to talk to I2C sensors!
+i2c:
+  sda: D2
+  scl: D1
+  scan: False
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${room_name}_multi_sensor_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+  # The BH1750 sensor by default uses I2C address 0X23
+  - platform: bh1750
+    name: ${friendly_room_name} Brightness
+    address: 0x23
+    update_interval: ${sensor_update_interval}
+    filters:
+      - sliding_window_moving_average:
+          window_size: ${updates_per_message}
+          send_every: ${updates_per_message}
+      - delta: 1
+
+  - platform: dht
+    pin: D7
+    model: DHT22
+    update_interval: ${sensor_update_interval}
+    temperature:
+      name: ${friendly_room_name} Temperature
+      filters:
+        - sliding_window_moving_average:
+            window_size: ${updates_per_message}
+            send_every: ${updates_per_message}
+        - delta: 0.2
+    humidity:
+      name: ${friendly_room_name} Humidity
+      filters:
+        - sliding_window_moving_average:
+            window_size: ${updates_per_message}
+            send_every: ${updates_per_message}
+        - delta: 0.5
+
+binary_sensor:
+  #AM312 PIR Sensor
+  - platform: gpio
+    pin: D5
+    device_class: motion
+    id: motion_sensor
+
+  #Motion sensor that will be sustained for 3 minutes 
+  - platform: template
+    name: ${friendly_room_name} Motion
+    device_class: motion
+    filters:
+      - delayed_off: 180s
+    lambda: |-
+      if (id(motion_sensor).state) {
+        // Motion is detected
+        return true;
+      } else {
+        // Motion is no longer detected
+        return false;
+      }

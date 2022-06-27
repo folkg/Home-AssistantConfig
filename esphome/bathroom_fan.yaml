@@ -1,0 +1,114 @@
+# ##################################
+# Sonoff Mini
+# ##################################
+# GPIO0 	Button (inverted)
+# GPIO1 	TX
+# GPIO2 	Available
+# GPIO3 	RX
+# GPIO4 	SW Input
+# GPIO12 	Relay and Red LED
+# GPIO13 	Blue LED (inverted)
+# GPIO16 	Optional sensor
+# GND     S1 (external switch input)
+
+# GPIO1 --> DHT22 'out'
+# '3V' --> DHT22 '+'
+# 'G' --> DHT22 '-'
+# ##################################
+# https://esphome.io/devices/sonoff.html#sonoff-mini
+# https://tasmota.github.io/docs/devices/Sonoff-Mini/
+# https://community.home-assistant.io/t/sonoff-mini-modifications/141998
+# ##################################
+
+substitutions:
+  device_name: bathroom_fan
+  friendly_name: Bathroom Fan
+  friendly_room_name: Bathroom
+  sensor_update_interval: 10s
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+ota:
+
+# Enable Home Assistant API
+api:
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+  - platform: dht
+    pin: GPIO1 #TX Pin
+    model: DHT22
+    update_interval: ${sensor_update_interval}
+    temperature:
+      name: ${friendly_room_name} Temperature
+      filters:
+       - delta: 1
+    humidity:
+      name: ${friendly_room_name} Humidity
+#      on_value_range:
+#      - above: 60
+#        then:
+#          if:
+#            condition:
+#              not:
+#                api.connected
+#            then:
+#              - switch.turn_on: relay
+#      - below: 50
+#        then:
+#          if:
+#            condition:
+#              not:
+#                api.connected
+#            then:
+#              - switch.turn_off: relay
+      filters:
+       - delta: 1
+
+binary_sensor:
+  - platform: gpio
+    id: button
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: True
+    on_press:
+      - switch.toggle: relay
+
+switch:
+  - platform: gpio
+    name: ${friendly_name}
+    icon: "mdi:fan"
+    pin: GPIO12
+    id: relay
+
+#status_led:
+#  pin:
+#    number: GPIO13
+#    inverted: yes

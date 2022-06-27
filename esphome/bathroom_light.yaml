@@ -1,0 +1,6 @@
+substitutions:
+  device_name: bathroom_light
+  friendly_name: Bathroom Light
+  friendly_room_name: Bathroom
+
+<<: !include kuled_k36_with_nightlight.yaml

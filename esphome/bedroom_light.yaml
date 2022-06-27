@@ -1,0 +1,5 @@
+substitutions:
+  device_name: bedroom_light
+  friendly_name: Bedroom Light
+
+<<: !include kuled_k36_light_switch_common.yaml

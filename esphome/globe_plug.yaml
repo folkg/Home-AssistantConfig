@@ -1,0 +1,96 @@
+substitutions:
+  device_name: globe_plug
+  friendly_name: Globe Plug
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s 
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+logger:
+
+ota:
+
+api:
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s 
+
+sensor:
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+#ip address
+#text_sensor:
+#  - platform: wifi_info
+#    ip_address:
+#      name: ${device_name}_wifi
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO14
+      mode: INPUT_PULLUP
+      inverted: true
+    id: plug_button
+#    on_press:
+#      - switch.toggle: relay
+    on_multi_click:
+    - timing:
+       - ON for 50ms to 699ms
+      then:
+        - switch.toggle: relay
+      invalid_cooldown: 300ms
+    - timing:
+      - ON for at least 700ms
+      then:
+        - homeassistant.event:
+            event: esphome.${device_name}_long
+    - timing:
+      - ON for at least 8000ms
+      then:
+        - switch.turn_on: restart_switch
+
+switch:
+  # Comment out this section to disable LED (1/2)
+  - platform: gpio
+    id: blue_led
+    pin:
+      number: GPIO4
+      inverted: true
+  # ##################
+
+  - platform: gpio
+    name: ${friendly_name}
+    pin: GPIO12
+    id: relay
+
+    # Comment out this section to disable LED (2/2)
+    on_turn_on:
+      - switch.turn_on: blue_led
+    on_turn_off:
+      - switch.turn_off: blue_led
+    # ##################
+
+    #Switch to reboot the device
+  - platform: restart
+    id: restart_switch
+    name: ${friendly_name} Reboot

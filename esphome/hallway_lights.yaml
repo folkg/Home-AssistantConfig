@@ -1,0 +1,155 @@
+# ##################################
+# MOES SS01 3-Way Light Switch
+# ##################################
+# D2 GPIO04: white led (inverted)
+# D1 GPIO05: red led (inverted)
+# D6 GPIO12: relay
+# D7 GPIO13: button (inverted)
+# D5 GPIO14: power/usage sensor (inverted)
+# ##################################
+# https://github.com/mjoshd/esphome_moes-ss01-3way-light-switch/blob/master/moes_ss01_3way_light_switch.yaml
+# https://www.home-assistant.io/components/light.switch/
+# ##################################
+
+substitutions:
+  # https://esphome.io/guides/configuration-types.html#substitutions
+  device_name: hallway_lights
+  friendly_name: Hallway Lights
+  icon: "mdi:lightbulb"
+
+esphome:
+  # https://esphome.io/components/esphome
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+logger:
+  # https://esphome.io/components/logger
+
+api:
+  # https://esphome.io/components/api
+  services:
+    - service: led_blink #will be prefaces with device_name in HA
+      then:
+        #Blink the white LED twice 
+        - switch.toggle: white_led
+        - delay: 150ms
+        - switch.toggle: white_led
+        - delay: 150ms
+        - switch.toggle: white_led
+        - delay: 150ms
+        - switch.toggle: white_led
+  #disables automatic reboot, will need to long press (8 seconds) to reboot if there are issues
+  reboot_timeout: 0s
+
+ota:
+  # https://esphome.io/components/ota
+
+status_led:
+  # https://esphome.io/components/status_led
+  pin:
+    number: GPIO5   # Red LED
+    inverted: True
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+
+binary_sensor:
+  - platform: gpio
+    # https://esphome.io/components/binary_sensor/gpio.html
+    pin:
+      number: GPIO14
+      inverted: True
+    id: power_sensor
+    filters:
+      - delayed_off: 50ms
+    on_press:
+      - switch.turn_off: white_led
+    on_release:
+      - switch.turn_on: white_led
+
+  - platform: gpio
+    pin:
+      number: GPIO13
+      inverted: True
+    id: button
+#    on_press:
+#      - switch.toggle: relay
+    on_multi_click:
+    - timing:
+       - ON for 50ms to 699ms
+      then:
+        - switch.toggle: relay
+      invalid_cooldown: 300ms
+    - timing:
+      - ON for at least 700ms
+      then:
+        - homeassistant.event:
+            event: esphome.${device_name}_long
+    - timing:
+      - ON for at least 8000ms
+      then:
+        - switch.turn_on: restart_switch
+
+switch:
+  - platform: gpio
+    # https://esphome.io/components/switch/gpio
+    id: white_led
+    pin:
+      number: GPIO4
+      inverted: True
+    restore_mode: RESTORE_DEFAULT_ON
+
+  - platform: gpio
+    pin: GPIO12
+    id: relay
+
+  # present the state of the switch in HA based on the sensor
+  - platform: template
+    # https://esphome.io/components/switch/template.html
+    name: ${friendly_name}
+    icon: ${icon}
+    lambda: |-
+      if (id(power_sensor).state) {
+        return true;
+      } else {
+        return false;
+      }
+    turn_on_action:
+      - if:
+          condition:
+            binary_sensor.is_off: power_sensor
+          then:
+            - switch.toggle: relay
+    turn_off_action:
+      - if:
+          condition:
+            binary_sensor.is_on: power_sensor
+          then:
+            - switch.toggle: relay
+
+    #Switch to reboot the device
+  - platform: restart
+    id: restart_switch
+    name: ${friendly_name} Reboot

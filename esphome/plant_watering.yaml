@@ -1,0 +1,106 @@
+# ##################################
+# NodeMCU v3 with Capacitive Moisture Sensor, Relay
+# ##################################
+# NodeMCU 'A0' --> Sensor 'AOUT'
+# NodeMCU '3V' --> Sensor 'VCC'
+# NodeMCU 'G' --> Sensor 'GND'
+
+# NodeMCU 'D3' --> Relay 'IN'
+# NodeMCU '3V' --> Relay 'VCC'
+# NodeMCU 'G' --> Relay 'GND'
+
+# Relay 'C' --> USB '+'
+# Relay 'NO' --> Pump '+'
+# USB '-' --> Pump '-'
+# ##################################
+# https://docs.zerynth.com/latest/_images/nodemcu3_comm.jpg
+# ##################################
+substitutions:
+  device_name: plant_water_pump
+  friendly_name: Plant Water Pump
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name} AP
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+logger:
+
+ota:
+
+api:
+  services:
+    - service: water_plants #will be prefaced with device_name in HA
+      then:
+        - output.turn_on: water_pump
+        - delay: 5s
+        - output.turn_off: water_pump
+
+sensor:
+  #wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 12
+          send_every: 12
+      - delta: 1
+      
+  - platform: adc
+    pin: A0
+    name: "Soil Moisture"
+    unit_of_measurement: "%"
+    icon: "mdi:flower"
+    accuracy_decimals: 0
+    update_interval: 30min #5s
+    # to test this, simply change the update time to 5s and read the logs
+    filters:
+      # 0.8v = in wet soil
+      # 0.5v = in dry soil
+      - lambda: |-
+          if (x > 0.8) {
+            return 0;
+          } else if (x < 0.5) {
+            return 100;
+          } else {
+            return (0.8-x) / (0.8-0.5) * 100;
+          }
+      - delta: 1
+    #instead, we could write a script to turn on pins D4, D5, D6, D7, etc. one at a time to provide the 3V to multiple soil sensors
+    
+binary_sensor:
+  # indication of the pump status
+  - platform: template
+    name: "Water Pump Status"
+    device_class: power
+    lambda: |-
+      if (id(water_pump).state) {
+        return true;
+      } else {
+        return false;
+      }
+
+output:
+  - platform: gpio
+    pin: D3
+    id: water_pump
+
+#delete the switch after testing the proper amount of watering time, don't want to provide remote control to accidentally turn pump on without automated off
+switch:
+  - platform: output
+    id: water_pump_switch
+    name: "Water Pump"
+    icon: "mdi:water-pump"
+    output: water_pump

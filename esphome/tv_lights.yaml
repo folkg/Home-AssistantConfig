@@ -1,0 +1,62 @@
+# To flash:
+# https://tinkerman.cat/post/magic-home-led-controller-espurnad/
+
+substitutions:
+  device_name: tv_lights
+  friendly_name: TV Lights
+
+esphome:
+  name: ${device_name}
+  platform: ESP8266
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${friendly_name}
+    password: "51Uv8rKokvrP"
+
+captive_portal:
+
+logger:
+
+ota:
+
+api:
+
+sensor:
+#wifi signal
+  - platform: wifi_signal
+    name: ${device_name}_signal
+    update_interval: 300s
+
+#ip address
+#text_sensor:
+# - platform: wifi_info
+# ip_address:
+# name: ${device_name}_wifi
+
+output:
+  - platform: esp8266_pwm
+    pin: GPIO05
+    id: output_red
+  - platform: esp8266_pwm
+    pin: GPIO12
+    id: output_green
+  - platform: esp8266_pwm
+    pin: GPIO13
+    id: output_blue
+
+light:
+  - platform: rgb
+    name: ${friendly_name}
+    red: output_red
+    green: output_green
+    blue: output_blue
+    effects:
+    - strobe:
+    - flicker:
+    - random:
