@@ -697,19 +697,6 @@ light:
 
 #Scenes
 scene:
-  - name: Main Area Bright
-    entities:
-      light.kitchen_table:
-        state: "on"
-        brightness: 165
-      light.liquor_lights:
-        state: "on"
-        brightness: 80
-      light.reading_lamp:
-        state: "on"
-        brightness: 255 #100%
-        color_temp: 355
-
   - name: Main Area Dim
     entities:
       light.kitchen_table:
