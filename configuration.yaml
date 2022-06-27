@@ -397,6 +397,24 @@ template:
     - platform: time_pattern
       minutes: "/5"
   - sensor:
+      - name: "kitchen_counter_lights_brightness"
+        state: >
+            {% set max_brightness = 100 %}
+            {% set min_brightness = 25 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+
       - name: "kitchen_table_brightness"
         state: >
             {% set max_brightness = 100 %}
@@ -414,6 +432,7 @@ template:
             {% else %}
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
             {% endif %}
+
       - name: "liquor_lights_brightness"
         state: >
             {% set max_brightness = 31 %}
@@ -431,6 +450,7 @@ template:
             {% else %}
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
             {% endif %}
+
       - name: "reading_lamp_brightness"
         state: >
             {% set max_brightness = 100 %}
@@ -448,6 +468,7 @@ template:
             {% else %}
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
             {% endif %}
+
       - name: "reading_lamp_cold_white"
         state: >
             {% set max_brightness = 255 %}
