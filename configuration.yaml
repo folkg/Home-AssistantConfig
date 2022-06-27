@@ -518,7 +518,7 @@ template:
             
             {{ (sun_elevation < -1 or current_time > start_time)
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (130 < sun_azimuth < 245 and south_brightness > 25000)
+            or ( (130 < sun_azimuth < 245)
                 and (sun_elevation < 30
                     or (main_area_temperature > 22 and outdoor_temperature > 15)
                 )
