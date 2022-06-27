@@ -1,0 +1,67 @@
+all_people:
+  name: All People
+  entities:
+    - binary_sensor.carla_home
+    - binary_sensor.graeme_home
+
+main_area_lights:
+  name: Main Area Lights
+  entities:
+    - light.reading_lamp
+    - light.tv_lights
+    - light.kitchen_table
+    - light.liquor_lights
+    - light.kitchen_island_lights
+    - light.kitchen_counter_lights
+    - light.kitchen_cabinet_lights
+    - light.hallway_lights
+    - light.balcony_lights
+
+kitchen_lights:
+  name: Kitchen Lights
+  entities:
+    - light.kitchen_island_lights
+    - light.kitchen_counter_lights
+    - light.kitchen_cabinet_lights
+
+living_room_lights:
+  name: Living Room Lights
+  entities:
+    - light.table_lamp
+    - light.reading_lamp
+    - light.tv_lights
+    - light.kitchen_table
+    - light.liquor_lights
+    - light.hallway_lights
+    
+bedroom_lights:
+  name: Bedroom Lights
+  entities:
+    - light.bedroom_light
+    - light.bedside_light
+
+main_area_switches:
+  name: Main Area Switches
+  entities:
+    - light.hallway_lights
+    - light.liquor_lights
+    - light.kitchen_table
+
+bathroom_lights:
+  name: Bathroom Lights
+  entities:
+    - light.bathroom_light
+    - light.bathroom_shower_light
+
+main_area_bright:
+  name: Main Area Bright
+  all: true #inverts this option, both need to be on for it to be true
+  entities:
+    - binary_sensor.living_room_bright
+    - binary_sensor.kitchen_bright
+
+#bedside_lights:
+#  name: Bedside Lights
+#  entities:
+#    - light.carla_beside
+#    - light.graeme_bedside

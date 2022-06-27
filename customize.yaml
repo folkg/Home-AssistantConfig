@@ -1,0 +1,28 @@
+sensor.hallway_switch_long_press:
+  hidden: true
+sensor.globe_plug_signal:
+  hidden: true
+sensor.tv_lights_rgb_value:
+  hidden: true
+light.tv_lights:
+  friendly_name: TV Lights
+  icon: mdi:television
+light.reading_lamp:
+  icon: mdi:floor-lamp
+light.table_lamp:
+  icon: mdi:lamp
+light.kitchen_table:
+  icon: mdi:ceiling-light
+light.liquor_lights:
+  icon: mdi:bottle-wine
+light.bathroom:
+  icon: mdi:wall-sconce-variant
+switch.fire_place:
+  icon: mdi:fire
+light.bathroom_light:
+  icon: mdi:wall-sconce
+light.kitchen_cabinet_lights:
+  icon: mdi:wall-sconce-flat
+light.kitchen_island_lights:
+  icon: mdi:wall-sconce-flat
+light.hallway_lights_2: {}

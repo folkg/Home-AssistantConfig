@@ -1,0 +1,876 @@
+- alias: sensor_values_to_file
+  initial_state: 'on'
+  trigger:
+  - minutes: /5
+    platform: time_pattern
+  condition:
+  - condition: numeric_state
+    entity_id: sun.sun
+    attribute: elevation
+    above: 0
+  action:
+  - service: notify.filenotify
+    data_template: 
+      message: ",{{ states.sun.sun.attributes.elevation }},{{ states.sun.sun.attributes.azimuth }},{{ states.sensor.south_window_brightness.state }},{{ states.sensor.west_window_brightness.state }}"
+
+- alias: Merry Christmas Carla
+  trigger:
+  - entity_id: binary_sensor.carla_home
+    platform: state
+    to: 'on'
+  condition:
+  - condition: template
+    value_template: '{{ now().month == 12 and now().day == 25 }}'
+  - condition: time
+    before: '12:00:00'
+  action:
+  - service: script.turn_on
+    entity_id: script.merry_christmas
+  id: e992b988667f41d5b163ab89160b22b0
+
+- alias: Phone Sends Input Boolean (wifi connect/disconnect, charging/not charging)
+  trigger:
+    platform: webhook
+    webhook_id: 61bd3fb149de4981bdb96f0ad88ff7d0
+  action:
+    service_template: '{{ trigger.json.service }}'
+    data_template:
+      entity_id: '{{ trigger.json.entity_id }}'
+  id: 3c81c2ad7f794bb5a2b5f92bf7dc7cdc
+
+- alias: Vacation Mode On
+  trigger:
+  - entity_id: group.all_people
+    platform: state
+    to: 'off'
+    for:
+      hours: 24
+  condition:
+  - entity_id: binary_sensor.guest_mode
+    condition: state
+    state: 'off'
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.vacation_mode
+- alias: Vacation Mode Off
+  trigger:
+  - entity_id: group.all_people
+    platform: state
+    to: 'on'
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.vacation_mode
+
+
+- alias: Long Press Bedroom Light Switch
+  trigger:
+    platform: event
+    event_type: esphome.bedroom_light_long
+  action:
+  - service: esphome.bedroom_light_led_blink
+#   - service: light.toggle
+#     entity_id: light.bedside_light
+#   - service: light.turn_off
+#     entity_id: light.bedroom_light
+#   - service: light.turn_off
+#     entity_id: light.ensuite_bath_light
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.baby_in_bed_master
+- alias: Turn off Baby in Bed Master
+  trigger:
+    - platform: state
+      entity_id: light.bedroom_light
+      to: 'on'
+    - platform: state
+      entity_id: group.all_people
+      to: 'off'
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.baby_in_bed_master
+- alias: Turn on Ambient Sounds in Master Bedroom
+  trigger:
+    - platform: state
+      entity_id: input_boolean.baby_in_bed_master
+      to: 'on'
+  action:
+  - service: script.turn_on
+    entity_id: script.rain_sounds_master
+- alias: Turn off Ambient Sounds in Master Bedroom
+  trigger:
+    - platform: state
+      entity_id: input_boolean.baby_in_bed_master
+      to: 'off'
+  action:
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.bedroom_speaker
+  - service: script.turn_off
+    entity_id: script.rain_sounds_master
+
+- alias: Long Press Man Cave Switch
+  trigger:
+    platform: event
+    event_type: esphome.man_cave_light_long
+  action:
+  - service: esphome.man_cave_light_led_blink
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.baby_in_bed_inez
+- alias: Turn off Baby in Bed Inez Room
+  trigger:
+    - platform: state
+      entity_id: light.man_cave_light
+      to: 'on'
+    - platform: state
+      entity_id: group.all_people
+      to: 'off'
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.baby_in_bed_inez
+- alias: Turn on Ambient Sounds in Inez Bedroom
+  trigger:
+    - platform: state
+      entity_id: input_boolean.baby_in_bed_inez
+      to: 'on'
+  action:
+  - service: script.turn_on
+    entity_id: script.rain_sounds_inez
+- alias: Turn off Ambient Sounds in Inez Bedroom
+  trigger:
+    - platform: state
+      entity_id: input_boolean.baby_in_bed_inez
+      to: 'off'
+  action:
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.man_cave_speaker
+  - service: script.turn_off
+    entity_id: script.rain_sounds_inez
+
+### Light Automations ###
+
+- alias: Lights Out Activated
+  trigger:
+  # everyone in bed after 8PM (and before 9AM) with the bedroom lights off
+  - platform: template
+    value_template: >
+        {% set home = states.sensor.n_people_home.state | int > 0 %}
+        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
+        {% set bedroom_lights = states.group.bedroom_lights.state %}
+        {% set current_time = now().strftime('%T') %}
+
+        {{ home
+        and everyone_in_bed
+        and bedroom_lights == 'off'
+        and ( current_time > '20:00:00' or current_time < '09:00:00' )
+        }}
+  # Long pressing the hallway lights
+  - platform: event
+    event_type: esphome.hallway_lights_long
+  action:
+  - service: esphome.hallway_lights_led_blink
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.lights_out
+  - service: media_player.turn_off
+    entity_id: media_player.android_tv
+
+- alias: Lights Out De-activated
+  trigger:
+  # Someone comes home
+  - entity_id: binary_sensor.graeme_home
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.carla_home
+    platform: state
+    to: 'on'
+  # One of the main area light switches is turned on (hallway, kitchen table, liquor)
+  - entity_id: group.main_area_switches
+    platform: state
+    to: 'on'
+  # The TV is switched on
+  - platform: state
+    entity_id: sensor.sony_bravia_state
+    from:
+      - 'off'
+  # Graeme's alarm went off at home
+  - platform: webhook
+    webhook_id: 3fce37b7644b4e5e88079ca1a215c74b
+  # If someone (or everyone) is out of bed after 9AM
+  - platform: template
+    value_template: >
+        {% set home = states.sensor.n_people_home.state | int > 0 %}
+        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
+        {% set current_time = now().strftime('%T') %}
+        
+        {{ home
+        and not(everyone_in_bed)
+        and ( '09:00:00' < current_time < '20:00:00' )
+        }}
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.lights_out
+
+  ## TV Lights ##
+
+  # Create default scene for the TV bias lights when hassio starts
+- alias: Default TV Lights Scene
+  trigger:
+    platform: homeassistant
+    event: start
+  action:
+    service: scene.create
+    data:
+      scene_id: tv_lights_coloured
+      entities:
+        light.tv_lights:
+          state: "on"
+          effect: "none"
+          rgbw_color: [255,0,255,100]
+          brightness: 160
+
+  # Save to Scene automation when the lights are manually changed
+- alias: Save the TV Bias Lights to Scene
+  trigger:
+    platform: state
+    entity_id: light.tv_lights
+  condition:
+  - condition: state
+    entity_id: sensor.tv_lights_setting
+    state: "coloured"
+  action:
+  - service: scene.create
+    data:
+      scene_id: tv_lights_coloured
+      snapshot_entities:
+      - light.tv_lights
+
+- alias: Change TV Lights to Coloured (Bias Lighting)
+  trigger:
+  - platform: state
+    entity_id: sensor.tv_lights_setting
+    to: 'coloured'
+  action:
+  - service: scene.turn_on
+    target:
+      entity_id: scene.tv_lights_coloured
+
+- alias: Change TV Lights to White (Normal Lighting)
+  trigger:
+  - platform: state
+    entity_id: sensor.tv_lights_setting
+    to: 'white'
+  - platform: state
+    entity_id: sensor.tv_ambient_brightness
+  condition:
+  - condition: state
+    entity_id: sensor.tv_lights_setting
+    state: "white"
+  action:
+  - service: light.turn_on
+    data:
+      rgbw_color: >
+        [{{ states.sensor.tv_ambient_red.state }},0,0,255]
+      brightness_pct: >
+        {{ states.sensor.tv_ambient_brightness.state }}
+      effect: "none"
+    target:
+      entity_id: light.tv_lights
+
+- alias: Change TV Lights to Leafs Lights
+  trigger:
+  - platform: state
+    entity_id: sensor.tv_lights_setting
+    to: 'leafs'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.tv_lights
+    data:
+      effect: "Leafs Lights"
+      brightness: 240
+
+- alias: Change TV Lights to Flames Lights
+  trigger:
+  - platform: state
+    entity_id: sensor.tv_lights_setting
+    to: 'flames'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.tv_lights
+    data:
+      effect: "Flames Stripes"
+      brightness: 240
+
+- alias: Change TV Lights to Off
+  trigger:
+  - platform: state
+    entity_id: sensor.tv_lights_setting
+    to: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.tv_lights
+
+- alias: Change Main Area Lights to Bright
+  trigger:
+  - platform: state
+    entity_id: sensor.main_area_lights_setting
+    to: 'bright'
+  - platform: state
+    entity_id: sensor.reading_lamp_cold_white
+  condition:
+  - condition: state
+    entity_id: sensor.main_area_lights_setting
+    state: "bright"
+  action:
+  - service: light.turn_on
+    data:
+      brightness_pct: >
+        {{ states.sensor.kitchen_table_brightness.state }}
+    target:
+      entity_id: light.kitchen_table
+  - service: light.turn_on
+    data:
+      brightness_pct: >
+        {{ states.sensor.liquor_lights_brightness.state }}
+    target:
+      entity_id: light.liquor_lights
+  - service: light.turn_on
+    data:
+      rgbww_color: >
+        [255,255,255,{{ states.sensor.reading_lamp_cold_white.state }},255]
+      brightness_pct: >
+        {{ states.sensor.reading_lamp_brightness.state }}
+    target:
+      entity_id: light.reading_lamp
+
+- alias: Change Main Area Lights to Dim
+  trigger:
+  - platform: state
+    entity_id: sensor.main_area_lights_setting
+    to: 'dim'
+  action:
+  - service: scene.turn_on
+    target:
+      entity_id: scene.main_area_dim
+
+- alias: Change Main Area Lights to Off
+  trigger:
+  - platform: state
+    entity_id: sensor.main_area_lights_setting
+    to: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id:
+        - light.kitchen_table
+        - light.liquor_lights
+        - light.reading_lamp
+
+- alias: Change Kitchen Lights to Bright
+  trigger:
+  - platform: state
+    entity_id: sensor.kitchen_lights_setting
+    to: 'bright'
+  action:
+  - service: scene.turn_on
+    target:
+      entity_id: scene.kitchen_bright
+
+- alias: Change Kitchen Lights to Dim
+  trigger:
+  - platform: state
+    entity_id: sensor.kitchen_lights_setting
+    to: 'dim'
+  action:
+  - service: scene.turn_on
+    target:
+      entity_id: scene.kitchen_dim
+
+- alias: Change Kitchen Lights to Off
+  trigger:
+  - platform: state
+    entity_id: sensor.kitchen_lights_setting
+    to: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id:
+        - light.kitchen_cabinet_lights
+        - light.kitchen_counter_lights
+        - light.kitchen_island_lights
+
+- alias: Change Hallway Lights to On
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.hallway_lights_on
+    to: 'on'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.hallway_lights
+
+- alias: Change Hallway Lights to Off
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.hallway_lights_on
+    to: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.hallway_lights
+
+- alias: Change Balcony Lights to On
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.balcony_lights_on
+    to: 'on'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.balcony_lights
+
+- alias: Change Balcony Lights to Off
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.balcony_lights_on
+    to: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.balcony_lights
+
+### End Light Automations ###
+
+
+### Start Curtain Automations ###
+
+- alias: Close West Curtain
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.close_west_window
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: input_boolean.vacation_mode
+    state: 'off'
+  action:
+  - service: cover.close_cover
+    target:
+      entity_id:
+      - cover.west_window
+- alias: Open West Curtain
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.close_west_window
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: input_boolean.vacation_mode
+    state: 'off'
+  action:
+  - service: cover.open_cover
+    target:
+      entity_id:
+      - cover.west_window
+
+- alias: Close South Curtain
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.close_south_window
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: input_boolean.vacation_mode
+    state: 'off'
+  action:
+  - service: cover.close_cover
+    target:
+      entity_id:
+      - cover.south_window
+- alias: Open South Curtain
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.close_south_window
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: input_boolean.vacation_mode
+    state: 'off'
+  action:
+  - service: cover.open_cover
+    target:
+      entity_id:
+      - cover.south_window
+
+### End Curtain Automations ###
+
+- alias: Open Windows
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.home_realfeel_temperature
+      below: sensor.house_temperature
+  action:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: binary_sensor.graeme_home
+          state: 'on'
+        sequence:
+        - service: notify.mobile_app_graeme_s_phone
+          data:
+            title: It's getting cool outside
+            message: "❄️️ Time to open up the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: binary_sensor.carla_home
+          state: 'on'
+        sequence:
+        - service: notify.mobile_app_carla_s_phone
+          data:
+            title: It's getting cool outside
+            message: "❄️Hi Schnookie!️ Time to open up the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+  id: 6961bf7a13eb49cb8fcb421830be7ee4
+- alias: Close Windows
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.home_realfeel_temperature
+      above: sensor.house_temperature
+  action:
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: binary_sensor.graeme_home
+          state: 'on'
+        sequence:
+        - service: notify.mobile_app_graeme_s_phone
+          data:
+            title: It's getting hot outside
+            message: "🔥 Time to close all the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+    - choose:
+      - conditions:
+        - condition: state
+          entity_id: binary_sensor.carla_home
+          state: 'on'
+        sequence:
+        - service: notify.mobile_app_carla_s_phone
+          data:
+            title: It's getting hot outside
+            message: "🔥 Hi Schnookie! Time to close all the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+  id: 85fc51f1f71b4bc19f90842dc4a0b4e4
+  
+
+### Switch Press Automations ###
+
+- alias: Long Press Bathroom Light Switch
+  trigger:
+  - platform: event
+    event_type: esphome.bathroom_light_long
+  - platform: event
+    event_type: esphome.bathroom_shower_light_long
+  action:
+  - service: esphome.bathroom_light_led_blink
+  - service: esphome.bathroom_shower_light_led_blink
+  - service: switch.toggle
+    entity_id: switch.bathroom_fan
+  id: f0318b3173624d68875eeb9bb22eb7df
+- alias: Single Press Bathroom Light Switch with Lights On
+  trigger:
+    platform: event
+    event_type: esphome.bathroom_light_single
+  condition:
+  - condition: state
+    entity_id: light.bathroom_light
+    state: 'on'
+  action:
+  - service: light.turn_off
+    entity_id: light.bathroom_shower_light
+  - service: switch.turn_off
+    entity_id: switch.bathroom_fan
+  id: b3b614aed0a44fe49e86558bdbe65e36
+- alias: Single Press Bathroom Shower Light Switch with Lights Off
+  trigger:
+    platform: event
+    event_type: esphome.bathroom_shower_light_single
+  condition:
+  - condition: state
+    entity_id: light.bathroom_shower_light
+    state: 'off'
+  action:
+  - service: light.turn_on
+    entity_id: light.bathroom_light
+  - service: switch.turn_on
+    entity_id: switch.bathroom_fan
+  id: 4679a7dbee964879aac5c2382b77e644
+
+- alias: Turn off Ensuite light with bedroom lights (if no motion)
+  trigger:
+  - platform: state
+    entity_id: light.bedroom_light
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: binary_sensor.ensuite_bath_motion
+    state: 'off'
+  action:
+  - service: light.turn_off
+    entity_id: light.ensuite_bath_light
+  id: 122f7afdbfc042adb5961b436e780f0f
+  
+- alias: Long Press Globe Plug Button
+  trigger:
+    platform: event
+    event_type: esphome.globe_plug_long
+  action:
+  - service: light.toggle
+    entity_id: light.bedside_light
+  - service: light.turn_off
+    entity_id: light.bedroom_light
+  - service: light.turn_off
+    entity_id: light.ensuite_bath_light
+  id: 631a63d2a8a341588f36f005817eb7f1
+
+### End Switch Press Automations ###
+
+- id: 4ffa1b995e244dd89aa6c65a35116f71
+  alias: Ensuite Bath Light Timeout
+  trigger:
+  - platform: state
+    to: 'off'
+    for: 0:9:00
+    entity_id: binary_sensor.ensuite_bath_motion
+  condition: []
+  action:
+  - service: light.turn_off
+    entity_id: light.ensuite_bath_light
+  mode: single
+
+- id: e102151cdc834ec1aa82d27defd40a74
+  alias: Announce Graeme's arrival
+  trigger:
+  - entity_id: binary_sensor.graeme_home
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: binary_sensor.carla_home
+    state: 'on'
+    for:
+      seconds: 60
+  - condition: numeric_state
+    entity_id: sensor.n_people_bed
+    below: '1'
+  action:
+  - service: tts.google_translate_say
+    data:
+      message: Graham's Home!
+      entity_id: media_player.kitchen_speaker
+      cache: true
+  mode: single
+
+- id: 36df66c10ad8427e976e40d858e56773
+  alias: Announce Carla's arrival
+  trigger:
+  - entity_id: binary_sensor.carla_home
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: binary_sensor.graeme_home
+    for:
+      seconds: 60
+    state: 'on'
+  - condition: numeric_state
+    entity_id: sensor.n_people_bed
+    below: '1'
+  action:
+  - data:
+      message: Carla's Home!
+    entity_id: media_player.kitchen_speaker
+    service: tts.google_translate_say
+  mode: single
+
+- alias: Turn on Hallway Lights if Arriving with Media Playing
+  trigger:
+  - entity_id: binary_sensor.graeme_home
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.carla_home
+    platform: state
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: group.main_area_bright
+    state: 'off'
+  - condition: or
+    conditions:
+    - condition: state
+      entity_id: media_player.sony_bravia
+      state: playing
+  action:
+  - service: light.turn_on
+    entity_id: light.hallway_lights
+  id: ad2d6f7628d54c9ca5a267ad477439dd
+
+- alias: Turn Everything off when Everyone Leaves
+  trigger:
+  - entity_id: group.all_people
+    platform: state
+    to: 'off'
+  - entity_id: binary_sensor.guest_mode
+    platform: state
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: group.all_people
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.guest_mode
+    state: 'off'
+  action:
+  - service: media_player.media_stop
+    entity_id: media_player.all
+  - service: media_player.turn_off
+    entity_id: media_player.android_tv
+  - service: light.turn_off
+    entity_id: all
+  - service: switch.turn_off
+    entity_id: all
+#   - service: media_player.turn_off
+#     entity_id: media_player.living_room_soundbar_2
+  id: cc91877029344bf799853133ea5fb553
+
+- alias: Turn on Soundbar with TV
+  description: since the TV won't turn on the soundbar by itself, we'll do it with
+    Home Assistant!
+  trigger:
+  - entity_id: sensor.sony_bravia_state
+    platform: state
+    from: 'off'
+  action:
+  - service: media_player.turn_on
+    entity_id: media_player.living_room_soundbar_2
+  id: a65fc9aa311d46a081e8efdc29288858
+  
+- id: '1590037256306'
+  alias: Turn Off TV if Inactive
+  trigger:
+  - entity_id: media_player.android_tv
+    platform: state
+    to:
+      - 'off'
+      - 'standby'
+    for: 0:15:00 #to match the living room motion 15 minute delayed off
+  - entity_id: binary_sensor.living_room_motion
+    platform: state
+    to: 'off'
+  condition:
+  - entity_id: media_player.android_tv
+    for: 0:15:00
+    condition: state
+    state:
+      - 'off'
+      - 'standby'
+  - entity_id: binary_sensor.living_room_motion
+    condition: state
+    state: 'off'
+  action:
+  - entity_id: media_player.android_tv
+    service: media_player.turn_off
+  mode: single
+
+- alias: Calgary Tower Lights
+  trigger:
+  - platform: time
+    at: 04:00:00
+  condition:
+  - condition: state
+    entity_id: calendar.calgary_tower_lighting
+    state: 'on'
+  action:
+  - service: script.turn_on
+    entity_id: script.get_tower_colours
+    data:
+      variables:
+        calendar_description: '{{ states.calendar.calgary_tower_lighting.attributes.description
+          }}'
+
+- alias: Change Lamps to Match TV Lights
+  trigger:
+    platform: state
+    entity_id: light.tv_lights
+  condition:
+  - condition: state
+    entity_id: media_player.sony_bravia
+    state: playing
+  - condition: template
+    value_template: '{{ states.light.tv_lights.attributes.brightness > 1 }}'
+  action:
+    service: light.turn_on
+    data:
+      entity_id: light.reading_lamp, light.table_lamp
+      rgb_color: '{{ states.light.tv_lights.attributes.rgb_color }}'
+      brightness: 255
+      white_value: 0
+      transition: 2
+  id: 12bde2f55cd44d8aa8e9b838a013043c
+
+- id: '1591059091546'
+  alias: Set Initial Volume on Condo Speakers
+  trigger:
+  - entity_id: media_player.condo
+    platform: state
+    to: playing
+    from: idle
+  - entity_id: media_player.condo
+    platform: state
+    to: paused
+    from: idle
+  action:
+  - service: media_player.volume_set
+    data:
+      entity_id: media_player.living_room_soundbar
+      volume_level: 0.1
+  - service: media_player.volume_set
+    data:
+      entity_id: media_player.chromecastaudio1260
+      volume_level: 0.1
+
+### Robot Vacuum Automations ###
+- alias: Clean room
+  description: Start Roborock room cleaning triggered from Google Assistant (IFTTT)
+  trigger:
+    platform: webhook
+    webhook_id: UstHRP72f07guWDqwkZZ
+  action:
+  - service: python_script.vacuum_room
+    entity_id: vacuum.roborock_s4
+    data_template:
+      area: '{{ trigger.json.area }}'
+
+- id: '1600707789992'
+  alias: Roborock go to garbage after cleaning
+  trigger:
+  - entity_id: vacuum.roborock_s4
+    platform: state
+    from: cleaning
+ #   to: returning
+  condition:
+  # Only if it cleans more than 15m2, we don't need it waiting at the garbage after every small clean
+  - condition: template
+    value_template: '{{ states.vacuum.roborock_s4.attributes.cleaned_area > 15 }}'
+  action:
+  - service: vacuum.pause
+    entity_id: vacuum.roborock_s4
+  - delay: 3
+  - data: {}
+    service: script.go_to_garbage

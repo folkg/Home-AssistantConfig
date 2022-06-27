@@ -1,0 +1,155 @@
+
+- cal_id: 0t46h8vm443289dmjqhivpgsfs@group.calendar.google.com
+  entities:
+  - device_id: credit_cards
+    ignore_availability: true
+    name: Credit Cards
+    track: false
+
+- cal_id: family01398699244961350483@group.calendar.google.com
+  entities:
+  - device_id: family
+    ignore_availability: true
+    name: Family
+    track: false
+
+- cal_id: graemefolk@gmail.com
+  entities:
+  - device_id: main
+    ignore_availability: true
+    name: Main
+    track: false
+
+- cal_id: k7ehn449oas0onehdoa5md519861clg3@import.calendar.google.com
+  entities:
+  - device_id: can_ab_public_holidays
+    ignore_availability: true
+    name: can (ab) Public Holidays
+    track: false
+
+- cal_id: j7jgm9v4mj75i8jfhfik8rqiu0@group.calendar.google.com
+  entities:
+  - device_id: fluor
+    ignore_availability: true
+    name: Fluor
+    track: false
+
+- cal_id: hnlo9ddi84ug9d8u94k85dcvd0mdmoki@import.calendar.google.com
+  entities:
+  - device_id: can_ab_public_holidays
+    ignore_availability: true
+    name: can (ab) Public Holidays
+    track: false
+
+- cal_id: rkj23e5ivvst3fdamekml6oel5aoo24r@import.calendar.google.com
+  entities:
+  - device_id: graeme_folk_s_facebook_events
+    ignore_availability: true
+    name: Graeme Folk's Facebook events
+    track: false
+
+- cal_id: b9ddg3euov401gqp4mhbrvj6kg@group.calendar.google.com
+  entities:
+  - device_id: calgary_tower_lighting
+    ignore_availability: true
+    name: Calgary Tower Lighting
+    track: true
+    search: "Special"
+
+- cal_id: 0vqldnutg3i5vl629noserei5ajt44do@import.calendar.google.com
+  entities:
+  - device_id: can_ab_public_holidays
+    ignore_availability: true
+    name: can (ab) Public Holidays
+    track: false
+
+- cal_id: 5b46p7sssf1pqqu4mhjtjpjkm0@group.calendar.google.com
+  entities:
+  - device_id: calgary_roughnecks_2019
+    ignore_availability: true
+    name: Calgary Roughnecks 2019
+    track: false
+
+- cal_id: 5fk2s460qqgv4lb9o56bisb7hs@group.calendar.google.com
+  entities:
+  - device_id: fluor_days_off
+    ignore_availability: true
+    name: Fluor Days Off
+    track: false
+
+- cal_id: s2rq5pevdqqohve0uanaa8fibvgmb70v@import.calendar.google.com
+  entities:
+  - device_id: http_www_sportzsoft_com_team_teamweb_dll_teamcalendar_teamid_69497_nocache_1
+    ignore_availability: true
+    name: http://www.sportzsoft.com/team/teamWeb.dll/TeamCalendar?TeamId=69497&noCache=1
+    track: false
+
+- cal_id: addressbook#contacts@group.v.calendar.google.com
+  entities:
+  - device_id: contacts
+    ignore_availability: true
+    name: Contacts
+    track: false
+
+- cal_id: en.canadian#holiday@group.v.calendar.google.com
+  entities:
+  - device_id: holidays_in_canada
+    ignore_availability: true
+    name: Holidays in Canada
+    track: false
+
+- cal_id: nhl_21_%54oronto+%4daple+%4ceafs#sports@group.v.calendar.google.com
+  entities:
+  - device_id: toronto_maple_leafs
+    ignore_availability: true
+    name: Toronto Maple Leafs
+    track: true
+
+- cal_id: nhl_3_%43algary+%46lames#sports@group.v.calendar.google.com
+  entities:
+  - device_id: calgary_flames
+    ignore_availability: true
+    name: Calgary Flames
+    track: true
+
+- cal_id: vel391hco2e42vfcl2dohe91prtknu4c@import.calendar.google.com
+  entities:
+  - device_id: http_www_sportzsoft_com_team_teamweb_dll_teamcalendar_teamid_76917_nocache_1
+    ignore_availability: true
+    name: http://www.sportzsoft.com/team/teamWeb.dll/TeamCalendar?TeamId=76917&noCache=1
+    track: false
+
+- cal_id: 321114klbdm14ks6mlgq3rdfg4q6hi1b@import.calendar.google.com
+  entities:
+  - device_id: http_www_sportzsoft_com_team_teamweb_dll_teamcalendar_teamid_84776
+    ignore_availability: true
+    name: http://www.sportzsoft.com/team/teamWeb.dll/TeamCalendar?TeamId=84776
+    track: true
+
+- cal_id: iujjtajn13rk021liv9ipn38es@group.calendar.google.com
+  entities:
+  - device_id: todoist
+    ignore_availability: true
+    name: Todoist
+    track: true
+
+- cal_id: j7n8s5obta33er7brs8a2v64crcmrjru@import.calendar.google.com
+  entities:
+  - device_id: http_www_sportzsoft_com_team_teamweb_dll_teamcalendar_teamid_95930_nocache_1
+    ignore_availability: true
+    name: http://www.sportzsoft.com/team/teamWeb.dll/TeamCalendar?TeamId=95930&noCache=1
+    track: true
+
+- cal_id: 9rq6dddpspdrnbbkt0u2vh41so@group.calendar.google.com
+  entities:
+  - device_id: university_of_calgary
+    ignore_availability: true
+    name: University of Calgary
+    track: true
+
+- cal_id: algmrcqu41mlcojmh6vrtgeh5l1fn84o@import.calendar.google.com
+  entities:
+  - device_id: all_courses_university_of_calgary
+    ignore_availability: true
+    name: All Courses - University of Calgary
+    track: true

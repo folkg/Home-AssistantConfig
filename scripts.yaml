@@ -1,0 +1,260 @@
+merry_christmas:
+  alias: Merry Christmas Schnookie
+  sequence:
+  - service: automation.turn_off
+    entity_id: automation.media_player_playing_after_dark
+  - service: automation.turn_off
+    entity_id: automation.media_player_paused_stopped_after_dark
+  - delay: 5
+  - service: light.turn_on
+    data:
+      entity_id: light.tv_lights
+      brightness: 200
+      white_value: 0
+      effect: 'Christmas Lights'
+  - service: media_player.turn_on
+    entity_id: media_player.sony_xbr_65a8h
+  - delay: 5
+  - service: media_player.play_media
+    data:
+      entity_id: media_player.sony_xbr_65a8h
+      media_content_type: 'image/jpg'
+      media_content_id: 'http://1.0.0.7:8123/local/MerryChristmas.jpg'
+  - delay: 10
+  - service: androidtv.adb_command
+    data:
+      entity_id: media_player.sony_bravia
+      command: "BACK"
+  - service: automation.turn_on
+    entity_id: automation.media_player_playing_after_dark
+  - service: automation.turn_off
+    entity_id: automation.media_player_paused_stopped_after_dark
+  - service: media_player.select_source
+    data:
+      entity_id: media_player.spotify_graeme_folk
+      source: 'Living Room Soundbar'
+  - service: media_player.play_media
+    data:
+      media_content_type: playlist
+      entity_id: media_player.spotify_graeme_folk
+      media_content_id: 'https://open.spotify.com/playlist/37i9dQZF1DWTCHbho2Bfok'
+
+test_christmas_music:
+  sequence:
+  - service: media_player.select_source
+    data:
+      entity_id: media_player.spotify_graeme_folk
+      source: 'Man Cave Speaker'
+  - service: media_player.shuffle_set
+    data:
+      entity_id: media_player.spotify_graeme_folk
+      shuffle: true
+  - service: media_player.play_media
+    data:
+      media_content_type: playlist
+      entity_id: media_player.spotify_graeme_folk
+      media_content_id: 'https://open.spotify.com/playlist/37i9dQZF1DWTCHbho2Bfok'
+
+rain_sounds_master:
+    alias: Rain Sounds Master Bedroom
+    sequence:
+      - service: media_player.volume_set
+        data:
+          volume_level: 0.55
+        target:
+          entity_id: media_player.bedroom_speaker
+      - repeat:
+          until:
+            - condition: template
+              value_template: >-
+                {{ state_attr('media_player.bedroom_speaker', 'media_title') != 'Rain
+                sounds' or states('media_player.bedroom_speaker') != 'idle' }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_type: music
+                extra:
+                  title: Rain sounds
+                  thumb: >-
+                    http://www.gstatic.com/voice_delight/images/relaxation_sounds/icons/rain.png
+                media_content_id: 'https://storage.googleapis.com/relaxation-sounds/rain_3600.mp3'
+              target:
+                entity_id: media_player.bedroom_speaker
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 10
+                milliseconds: 0
+            - wait_for_trigger:
+                - platform: template
+                  value_template: >-
+                    {{ state_attr('media_player.bedroom_speaker', 'media_title') == 'Rain
+                    sounds' and is_state('media_player.bedroom_speaker', 'idle') }}
+              continue_on_timeout: false
+              timeout: '01:01:01'
+    mode: restart
+    icon: 'mdi:weather-pouring'
+
+ocean_sounds_master:
+    alias: Ocean Sounds Master Bedroom
+    sequence:
+      - service: media_player.volume_set
+        data:
+          volume_level: 0.55
+        target:
+          entity_id: media_player.bedroom_speaker
+      - repeat:
+          until:
+            - condition: template
+              value_template: >-
+                {{ state_attr('media_player.bedroom_speaker', 'media_title') != 'Ocean
+                sounds' or states('media_player.bedroom_speaker') != 'idle' }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_type: music
+                extra:
+                  title: Ocean sounds
+                  thumb: >-
+                    http://www.gstatic.com/voice_delight/images/relaxation_sounds/icons/ocean.png
+                media_content_id: 'https://storage.googleapis.com/relaxation-sounds/ocean_3600.mp3'
+              target:
+                entity_id: media_player.bedroom_speaker
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 10
+                milliseconds: 0
+            - wait_for_trigger:
+                - platform: template
+                  value_template: >-
+                    {{ state_attr('media_player.bedroom_speaker', 'media_title') == 'Ocean
+                    sounds' and is_state('media_player.bedroom_speaker', 'idle') }}
+              continue_on_timeout: false
+              timeout: '01:01:01'
+    mode: restart
+    icon: 'mdi:waves'
+
+rain_sounds_inez:
+    alias: Rain Sounds Inez Bedroom
+    sequence:
+      - service: media_player.volume_set
+        data:
+          volume_level: 0.55
+        target:
+          entity_id: media_player.man_cave_speaker
+      - repeat:
+          until:
+            - condition: template
+              value_template: >-
+                {{ state_attr('media_player.man_cave_speaker', 'media_title') != 'Rain
+                sounds' or states('media_player.man_cave_speaker') != 'idle' }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_type: music
+                extra:
+                  title: Rain sounds
+                  thumb: >-
+                    http://www.gstatic.com/voice_delight/images/relaxation_sounds/icons/rain.png
+                media_content_id: 'https://storage.googleapis.com/relaxation-sounds/rain_3600.mp3'
+              target:
+                entity_id: media_player.man_cave_speaker
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 10
+                milliseconds: 0
+            - wait_for_trigger:
+                - platform: template
+                  value_template: >-
+                    {{ state_attr('media_player.man_cave_speaker', 'media_title') == 'Rain
+                    sounds' and is_state('media_player.man_cave_speaker', 'idle') }}
+              continue_on_timeout: false
+              timeout: '01:01:01'
+    mode: restart
+    icon: 'mdi:weather-pouring'
+
+ocean_sounds_inez:
+    alias: Ocean Sounds Inez Bedroom
+    sequence:
+      - service: media_player.volume_set
+        data:
+          volume_level: 0.55
+        target:
+          entity_id: media_player.man_cave_speaker
+      - repeat:
+          until:
+            - condition: template
+              value_template: >-
+                {{ state_attr('media_player.man_cave_speaker', 'media_title') != 'Ocean
+                sounds' or states('media_player.man_cave_speaker') != 'idle' }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_type: music
+                extra:
+                  title: Ocean sounds
+                  thumb: >-
+                    http://www.gstatic.com/voice_delight/images/relaxation_sounds/icons/ocean.png
+                media_content_id: 'https://storage.googleapis.com/relaxation-sounds/ocean_3600.mp3'
+              target:
+                entity_id: media_player.man_cave_speaker
+            - delay:
+                hours: 0
+                minutes: 0
+                seconds: 10
+                milliseconds: 0
+            - wait_for_trigger:
+                - platform: template
+                  value_template: >-
+                    {{ state_attr('media_player.man_cave_speaker', 'media_title') == 'Ocean
+                    sounds' and is_state('media_player.man_cave_speaker', 'idle') }}
+              continue_on_timeout: false
+              timeout: '01:01:01'
+    mode: restart
+    icon: 'mdi:waves'
+
+go_leafs_go:
+  alias: Go Leafs Go
+  description: 'Starts the Leafs game on the Android TV'
+  sequence:
+  - service: scene.turn_on
+    entity_id: scene.leafs_mode_main_area
+#   - service: androidtv.adb_command
+#     data:
+#       entity_id: media_player.sony_bravia
+#       command: "am start -a android.intent.action.VIEW -d -n com.nhl.gc1112.free/com.nhl.tv.launch.viewcontrollers.SplashActivity"
+
+go_flames_go:
+  alias: Go Flames Go
+  description: 'Starts the Flames game on the Android TV'
+  sequence:
+  - service: scene.turn_on
+    entity_id: scene.flames_mode_main_area
+
+get_tower_colours:
+  alias: Get Calgary Tower Colours
+  description: 'parses the Lighting Schedule calendar description for colour names'
+  fields:
+    calendar_description:
+      description: 'the full text of the event description'
+      example: 'We will mark this occasion with Blue and White lights.'
+  sequence:
+
+return_to_base:
+    alias: Return to base
+    sequence:
+    - service: vacuum.return_to_base
+      data:
+        entity_id: vacuum.roborock_s4
+
+go_to_garbage:
+    alias: Go to the garbage
+    sequence:
+        service: xiaomi_miio.vacuum_goto
+        data:
+          x_coord: '20750'
+          y_coord: '23800'
+        target:
+          entity_id: vacuum.roborock_s4

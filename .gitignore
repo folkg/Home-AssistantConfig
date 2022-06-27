@@ -1,0 +1,18 @@
+# An * ensures that everything will be ignored.
+*
+
+# Whitelist files/folders with !, these will not be ignored.
+!*.yaml
+!.gitignore
+!*.md
+!.esphome
+
+# Ignore folders.
+.storage
+.cloud
+.google.token
+
+# Ensure these YAML files are ignored, they contain sensitive data/credentials.
+ip_bans.yaml
+secrets.yaml
+known_devices.yaml

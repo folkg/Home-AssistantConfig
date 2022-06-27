@@ -1,0 +1,722 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+logger:
+  default: error
+
+history:
+
+recorder:
+  purge_keep_days: 1
+#  include:
+#    domains:
+#      - sensor
+#      - switch
+
+http:
+  ip_ban_enabled: true
+  login_attempts_threshold: 3
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.33.0/24
+
+mobile_app:
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+sun:
+
+python_script:
+
+#Google Assistant Relay API
+rest_command:
+  assistant_broadcast:
+    url: http://192.168.1.114:3000/assistant
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ command }}", "user":"username", "broadcast":true}'
+    
+  assistant_converse:
+    url: http://192.168.1.114:3000/assistant
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ command }}", "user":"username", "converse":true}'
+
+  assistant_relay:
+    url: http://192.168.1.114:3000/assistant
+    method: POST
+    content_type: 'application/json'
+    payload: '{"command":"{{ command }}", "user":"username"}'
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+homeassistant:
+  customize: !include customize.yaml
+  #2FA via telegram notification to Graeme
+  auth_mfa_modules:
+    - type: notify
+      include:
+        - telegram_bot
+
+telegram_bot:
+  - platform: polling
+    api_key: !secret telegram_api_key
+    allowed_chat_ids:
+      - !secret telegram_graeme_chat_id
+
+notify:
+  #Graeme's telegram chat
+  - name: telegram_bot
+    platform: telegram
+    chat_id: !secret telegram_graeme_chat_id
+  # Sensor data
+  - platform: file
+    name: filenotify
+    filename: /config/lux-sun-elevation-data.csv
+    timestamp: true
+
+#Google Assistant integration with Alfred project and API key for "Hey Google, sync devices"
+google_assistant:
+  project_id: hassio-6ba0d
+  service_account: !include SERVICE_ACCOUNT.JSON
+  report_state: true
+  exposed_domains:
+    - light
+    - cover
+    - scene
+    - script
+
+#for Google Calendar
+google:
+  client_id: !secret google_calendar_client_id
+  client_secret: !secret google_calendar_client_secret
+
+media_player:
+  # Use the Python ADB implementation
+  - platform: androidtv
+    name: Android TV
+    host: 192.168.55.6
+    exclude_unnamed_apps: true
+    apps:
+      com.google.android.tvlauncher: "Home"
+      com.nhl.gc1112.free: "NHL Gamecenter"
+      com.netflix.ninja: "Netflix"
+      com.google.android.youtube.tv: "Youtube"
+      com.amazon.amazonvideo.livingroom: "Prime Video"
+      com.disney.disneyplus: "Disney+"
+      com.google.android.videos: "Google Play Movies & TV"
+    state_detection_rules:
+      'com.netflix.ninja':
+        - 'media_session_state'
+      'com.sony.dtv.tvx':
+        - 'standby'
+      'com.android.tv.settings':
+        - 'standby'
+      'com.sony.dtv.settings':
+        - 'standby'
+      'com.nhl.gc1112.free':
+        - 'paused'
+
+# Sensors
+sensor:
+  - platform: systemmonitor
+    resources:
+      - type: memory_free
+      - type: memory_use
+      - type: memory_use_percent
+  - platform: min_max
+    name: House Humidity
+    type: mean
+    entity_ids:
+      - sensor.kitchen_humidity
+      - sensor.living_room_humidity
+      - sensor.bedroom_humidity
+
+  - platform: min_max
+    name: House Temperature
+    type: mean
+    entity_ids:
+      - sensor.kitchen_temperature
+      - sensor.living_room_temperature
+      - sensor.bedroom_temperature
+
+binary_sensor:
+  - platform: trend
+    sensors:
+      bathroom_humidity_spike:
+        friendly_name: "Bathroom Humidity Spike"
+        device_class: moisture
+        entity_id: sensor.bathroom_humidity
+#        sample_duration: 40
+        min_gradient: 0.25 #15% humidity per min
+  - platform: threshold
+    name: "Living Room Bright"
+    device_class: light
+    entity_id: sensor.living_room_brightness
+    upper: 200
+    hysteresis: 50
+  - platform: threshold
+    name: "Kitchen Bright"
+    device_class: light
+    entity_id: sensor.kitchen_brightness
+    upper: 175
+    hysteresis: 50
+    
+template:
+  - sensor:
+      - name: "carla_home_away"
+        unique_id: "carla_home_away"
+        state: >
+          {% if states.binary_sensor.carla_home.state == 'on'  %}
+            Home
+          {% else %}
+            Away
+          {% endif %}
+
+  - sensor:
+      - name: "graeme_home_away"
+        unique_id: "graeme_home_away"
+        state: >
+          {% if states.binary_sensor.graeme_home.state == 'on'  %}
+            Home
+          {% else %}
+            Away
+          {% endif %}
+
+  - sensor:
+      - name: "n_people_home"
+        unique_id: "n_people_home"
+        state: >
+          {{ [states.binary_sensor.carla_home, states.binary_sensor.graeme_home, states.input_boolean.baby_in_bed_master, states.input_boolean.baby_in_bed_inez]
+             | selectattr('state', '==', 'on') | list | count }}
+
+  - sensor:
+      - name: "n_people_bed"
+        unique_id: "n_people_bed"
+        state: >
+          {{ [states.binary_sensor.carla_in_bed, states.binary_sensor.graeme_in_bed, states.input_boolean.baby_in_bed_master, states.input_boolean.baby_in_bed_inez]
+             | selectattr('state', '==', 'on') | list | count }}
+
+  - sensor:
+      - name: "n_guests"
+        unique_id: "n_guests"
+        state: >
+          {{ states.device_tracker | selectattr('state', 'eq', 'home')
+            | selectattr('attributes.scanner', 'eq', 'UnifiDeviceScanner') | list | count }}
+
+  - sensor:
+      - name: "TV Lights RGB Value"
+        unique_id: "tv_lights_rgb_value"
+        state: "{{ states.light.tv_lights.attributes.rgb_color|replace('(','')|replace(')','') }}"
+
+  - sensor:
+      - name: "Outdoor Brightness"
+        unique_id: "outdoor_brightness"
+        state: "{{ (states.sensor.south_window_brightness.state, states.sensor.bedroom_window_brightness.state) | max }}"
+
+  - sensor:
+      - name: "Midea Temperature"
+        unique_id: "midea_temperature"
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+            {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | default(0) %}
+            {{ midea_temp }}
+
+  - sensor:
+      - name: "Master Bedroom Temperature"
+        unique_id: "master_bedroom_temperature"
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+            {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | default(0) %}
+            {% set multi_sensor_temp = states.sensor.bedroom_temperature.state | default(0) %}
+            
+            {% if midea_temp == 0 %}
+              {{ multi_sensor_temp }}
+            {% else %}
+              {{ midea_temp }}
+            {% endif %}
+
+    # Kitchen Lights Setting
+  - sensor:
+      - name: "Kitchen Lights Setting"
+        unique_id: "kitchen_lights_setting"
+        state: >
+            {% set home = states.group.all_people.state %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            {% set kitchen_bright = states.binary_sensor.kitchen_bright.state %}
+            {% set kitchen_motion = states.binary_sensor.kitchen_motion.state %}
+            {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set noon = today_at("12:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if kitchen_bright == 'off' and home == 'on' %}
+              {% if lights_out == 'on' %}
+                {% if kitchen_motion == 'on' %}
+                  dim
+                {% else %}
+                  off
+                {% endif %}
+              {% else %}
+                {% if (current_time < end_time or guest_mode == "on")
+                and ( (noon > current_time > wakeup_time and sun_elevation < 1) 
+                    or kitchen_motion == 'on' ) %}
+                  bright
+                {% else %}
+                  dim
+                {% endif %}
+              {% endif %}
+            {% else %}
+              off
+            {% endif %}
+
+    # Main Area Lights Setting
+  - sensor:
+      - name: "Main Area Lights Setting"
+        unique_id: "main_area_lights_setting"
+        state: >
+            {% set home = states.group.all_people.state %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            {% set living_room_bright = states.binary_sensor.living_room_bright.state %}
+            {% set tv_media_state = states.sensor.sony_bravia_state.state %}
+            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+
+            {% if living_room_bright == 'off' and home == 'on' and lights_out == 'off' %}
+              {% if tv_media_state == 'playing' and deactivate_theatre_mode == 'off' %}
+                dim
+              {% else %}
+                bright
+              {% endif %}
+            {% else %}
+              off
+            {% endif %}
+
+    # TV Lights Setting
+  - sensor:
+      - name: "TV Lights Setting"
+        unique_id: "tv_lights_setting"
+        state: >
+            {% set home = states.group.all_people.state %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            {% set leafs_playing = states.calendar.toronto_maple_leafs.state %}
+            {% set flames_playing = states.calendar.calgary_flames.state %}
+            {% set tv_media_state = states.sensor.sony_bravia_state.state %}
+            {% set living_room_bright = states.binary_sensor.living_room_bright.state %}
+
+            {% if home == 'on' and lights_out == 'off' %}
+              {% if leafs_playing == 'on' %}
+                leafs
+              {% elif flames_playing == 'on' %}
+                flames
+              {% elif tv_media_state == 'playing' %}
+                coloured
+              {% elif living_room_bright == 'off' %}
+                white
+              {% else %}
+                off
+              {% endif %}
+            {% else %}
+              off
+            {% endif %}
+
+    # Sony Bravia State
+  - trigger:
+    - platform: state
+      entity_id: media_player.sony_chromecast
+      not_from:
+        - "unknown"
+        - "unavailable"
+      not_to:
+        - "unknown"
+        - "unavailable"
+    - platform: state
+      entity_id: media_player.android_tv
+      to:
+        - "playing"
+        - "standby"
+        - "off"
+      not_from:
+        - "unknown"
+        - "unavailable"
+    - platform: state
+      entity_id: media_player.android_tv
+      to:
+        - "paused"
+        - "idle"
+      not_from:
+        - "unknown"
+        - "unavailable"
+      for:
+        seconds: 2
+    sensor:
+      - name: "Sony Bravia State"
+        unique_id: "sony_bravia_state"
+        state: >
+            {% if states.media_player.android_tv.state == "off" %}
+                off
+            {% elif states.media_player.sony_chromecast.attributes.app_name == 'YouTube Music' or states.media_player.android_tv.attributes.app_name == 'YouTube Music' %}
+                standby
+            {% elif states.media_player.sony_chromecast.attributes.app_name in ['NHL PROD','Sportsnet','TSN'] %}
+                paused
+            {% else %}
+              {% if states.media_player.sony_chromecast.state not in ['unknown','off','unavailable'] %}
+                {% if states.media_player.sony_chromecast.state == "paused" %}
+                  {% if states.media_player.android_tv.state == "standby" %}
+                    standby
+                  {% else %}
+                    paused
+                  {% endif %}
+                {% else %}
+                    {{ states.media_player.sony_chromecast.state }}
+                {% endif %}
+              {% elif states.media_player.android_tv.state not in ['unknown','unavailable'] %}
+                  {{ states.media_player.android_tv.state }}
+              {% else %}
+                  off
+              {% endif %}
+            {% endif %}
+
+#    # Current West Window Max Lux
+#   - sensor:
+#       - name: "west_window_max_lux"
+#         state: >
+#             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
+#             {% set lux_function = (275 * e**(0.18 * sun_elevation) + 1000 )| int %}
+
+#             {{ (25000, lux_function) | min }}
+
+## Light Brightness Values ##
+  - trigger:
+    - platform: time_pattern
+      minutes: "/5"
+  - sensor:
+      - name: "kitchen_table_brightness"
+        state: >
+            {% set max_brightness = 100 %}
+            {% set min_brightness = 0 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+      - name: "liquor_lights_brightness"
+        state: >
+            {% set max_brightness = 31 %}
+            {% set min_brightness = 13 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+      - name: "reading_lamp_brightness"
+        state: >
+            {% set max_brightness = 100 %}
+            {% set min_brightness = 50 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+      - name: "reading_lamp_cold_white"
+        state: >
+            {% set max_brightness = 255 %}
+            {% set min_brightness = 0 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+
+      - name: "TV_ambient_brightness"
+        state: >
+            {% set max_brightness = 100 %}
+            {% set min_brightness = 40 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+            
+      - name: "TV_ambient_red"
+        state: >
+            {% set max_red = 128 %}
+            {% set min_red = 0 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ min_red }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ max_red }}
+            {% else %}
+                {{(current_time - start_time) / (end_time - start_time) * (max_red - min_red) + min_red }}
+            {% endif %}
+
+  - binary_sensor:
+      - name: "Close South Window"
+        state: >
+            {% set current_time = now() %}
+            {% set start_time = today_at("21:00") %}
+            {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
+            {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
+            {% set south_brightness = states.sensor.south_window_brightness.state | float %}
+            {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
+            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float %}
+            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float + states.sensor.living_room_temperature.state | float) / 2 %}
+            {% set tv_media_state = states.sensor.sony_bravia_state.state %}
+            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+            
+            {{ (sun_elevation < -1 or current_time > start_time)
+            or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
+            or ( (130 < sun_azimuth < 245 and south_brightness > 25000)
+                and (sun_elevation < 30
+                    or (main_area_temperature > 22 and outdoor_temperature > 15)
+                )
+            ) }}
+        delay_off:
+          minutes: 2
+          seconds: 5
+
+      - name: "Close West Window"
+        state: >
+            {% set current_time = now() %}
+            {% set start_time = today_at("21:00") %}
+            {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
+            {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
+            {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
+            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float %}
+            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float + states.sensor.living_room_temperature.state | float) / 2 %}
+            {% set tv_media_state = states.sensor.sony_bravia_state.state %}
+            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+            
+            {{ (sun_elevation < -1 or current_time > start_time)
+            or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
+            or ( (sun_azimuth > 200)
+                and (sun_elevation < 40
+                  or (main_area_temperature > 22 and outdoor_temperature > 15)
+                )
+            ) }}
+        delay_off:
+          minutes: 2
+          seconds: 5
+
+        # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
+      - name: "Balcony Lights On"
+        state: >
+            {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
+            {% set home = states.group.all_people.state %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            
+            {{ home == 'on'
+            and lights_out == 'off'
+            and sun_elevation < 0 }}
+
+      - name: "Hallway Lights On"
+        state: >
+            {% set n_people_bed = states.sensor.n_people_bed.state | int %}
+            {% set bedroom_lights = states.group.bedroom_lights.state %}
+            {% set home = states.group.all_people.state %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            {% set living_room_bright = states.binary_sensor.living_room_bright.state %}
+            {% set tv_media_state = states.sensor.sony_bravia_state.state %}
+            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("7:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            
+            {{ home == 'on'
+            and lights_out == 'off'
+            and living_room_bright == 'off'
+            and (end_time < current_time < start_time or guest_mode == "on")
+            and not(tv_media_state == 'playing' and deactivate_theatre_mode == 'off')
+            and not(n_people_bed > 0 and bedroom_lights == 'off') }}
+
+      - name: "Carla Home"
+        state: >
+          {% set unifi_phone_tracker = states.device_tracker.carla_pixel_6.state %}
+          {% set ha_app_phone_tracker = states.sensor.carla_s_phone_wifi_connection.state %}
+
+          {{ unifi_phone_tracker == "home" or ha_app_phone_tracker == "TheInternet24G"  }}
+
+      - name: "Graeme Home"
+        state: >
+          {% set unifi_phone_tracker = states.device_tracker.graeme_pixel_6.state %}
+          {% set ha_app_phone_tracker = states.sensor.graeme_pixel_6_wifi_connection.state %}
+
+          {{ unifi_phone_tracker == "home" or ha_app_phone_tracker == "TheInternet24G"  }}
+
+      - name: "Guest Mode"
+        state: >
+          {{ (states.device_tracker | selectattr('state', 'eq', 'home')
+            | selectattr('attributes.scanner', 'eq', 'UnifiDeviceScanner') | list | count
+            - [states.device_tracker.carla_pixel_6, states.device_tracker.graeme_pixel_6, states.device_tracker.og_pixel, states.device_tracker.ideapad_laptop] 
+            | selectattr('state', 'eq', 'home') | list | count) > 0 }}
+
+input_boolean:
+  baby_in_bed_master:
+    name: 'Baby is in Bed Master Bedroom'
+    icon: mdi:baby
+  baby_in_bed_inez:
+    name: 'Baby is in Bed Inezs Room'
+    icon: mdi:baby
+  lights_out:
+  deactivate_theatre_mode:
+  vacation_mode:
+    name: 'Vacation Mode'
+    icon: mdi:beach
+
+device_tracker:
+  - platform: unifi_direct
+    host: 192.168.1.136
+    username: !secret unifi_direct_username
+    password: !secret unifi_direct_password
+    interval_seconds: 120
+    consider_home: 360
+    new_device_defaults:
+        track_new_devices: true
+
+# Nmap Device Tracker
+#  - platform: nmap_tracker
+#    hosts: 192.168.1.0/24
+#    home_interval: 3
+#    exclude:
+#    - 192.168.1.114 # Hassio
+#    - 192.168.1.112 # Roku
+#    - 192.168.55.6 # Sony Bravia
+#    interval_seconds: 60
+#    consider_home: 185
+#    new_device_defaults:
+#      track_new_devices: true
+#      hide_if_away: false
+        
+# Bluetooth Device Tracker
+#  - platform: bluetooth_tracker
+#    interval_seconds: 60
+#    consider_home: 185
+#    new_device_defaults:
+#      track_new_devices: true
+#      hide_if_away: false
+
+light:
+  - platform: switch
+    name: "Bedroom Light"
+    entity_id: switch.bedroom_light
+  - platform: switch
+    name: "Ensuite Bath Light"
+    entity_id: switch.ensuite_bath_light
+  - platform: switch
+    name: "Bathroom Light"
+    entity_id: switch.bathroom_light
+  - platform: switch
+    name: "Bathroom Shower Light"
+    entity_id: switch.bathroom_shower_light
+  - platform: switch
+    name: "Man Cave Light"
+    entity_id: switch.man_cave_light
+  - platform: switch
+    name: "Hallway Lights"
+    entity_id: switch.hallway_lights
+  - platform: switch
+    name: "Balcony Lights"
+    entity_id: switch.balcony_lights
+  - platform: switch
+    name: "Bedside Light"
+    entity_id: switch.globe_plug
+
+#Scenes
+scene:
+  - name: Main Area Bright
+    entities:
+      light.kitchen_table:
+        state: "on"
+        brightness: 165
+      light.liquor_lights:
+        state: "on"
+        brightness: 80
+      light.reading_lamp:
+        state: "on"
+        brightness: 255 #100%
+        color_temp: 355
+
+  - name: Main Area Dim
+    entities:
+      light.kitchen_table:
+        state: "on"
+        brightness: 80
+      light.liquor_lights:
+        state: "on"
+        brightness: 50
+      light.reading_lamp:
+        state: "off"
+        #brightness: 105
+
+  - name: Kitchen Bright
+    entities:
+      light.kitchen_cabinet_lights:
+        state: "on"
+        brightness: 105
+      light.kitchen_island_lights:
+        state: "on"
+        brightness: 140
+      light.kitchen_counter_lights:
+        state: "on"
+        brightness: 255
+
+  - name: Kitchen Dim
+    entities:
+      light.kitchen_counter_lights:
+        state: "on"
+        brightness: 130
+      light.kitchen_cabinet_lights: false
+      light.kitchen_island_lights: false
