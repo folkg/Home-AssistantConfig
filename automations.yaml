@@ -525,10 +525,13 @@
           entity_id: binary_sensor.graeme_home
           state: 'on'
         sequence:
-        - service: notify.mobile_app_graeme_s_phone
+        - service: notify.mobile_app_graeme_pixel_6
           data:
-            title: It's getting cool outside
-            message: "❄️️ Time to open up the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+            title: "It's getting cool outside"
+            message: >-
+              ❄️️ Time to open up the windows. {{
+              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.house_temperature.state }}°C inside."
     - choose:
       - conditions:
         - condition: state
@@ -537,8 +540,11 @@
         sequence:
         - service: notify.mobile_app_carla_s_phone
           data:
-            title: It's getting cool outside
-            message: "❄️Hi Schnookie!️ Time to open up the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+            title: "It's getting cool outside"
+            message: >-
+              ❄️️ Hi Schnookie! Time to open up the windows. {{
+              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.house_temperature.state }}°C inside.""
   id: 6961bf7a13eb49cb8fcb421830be7ee4
 - alias: Close Windows
   trigger:
@@ -552,10 +558,13 @@
           entity_id: binary_sensor.graeme_home
           state: 'on'
         sequence:
-        - service: notify.mobile_app_graeme_s_phone
+        - service: notify.mobile_app_graeme_pixel_6
           data:
-            title: It's getting hot outside
-            message: "🔥 Time to close all the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+            title: "It's getting hot outside"
+            message: >-
+              🔥 Time to close all the windows. {{
+              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.house_temperature.state }}°C inside.
     - choose:
       - conditions:
         - condition: state
@@ -564,8 +573,11 @@
         sequence:
         - service: notify.mobile_app_carla_s_phone
           data:
-            title: It's getting hot outside
-            message: "🔥 Hi Schnookie! Time to close all the windows. {{ states.sensor.home_realfeel_temperature.state }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+            title: "It's getting hot outside"
+            message: >-
+              🔥 Hi Schnookie! Time to close all the windows. {{
+              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.house_temperature.state }}°C inside.
   id: 85fc51f1f71b4bc19f90842dc4a0b4e4
   
 
