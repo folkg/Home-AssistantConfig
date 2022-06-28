@@ -584,7 +584,8 @@ template:
 
       - name: "Hallway Lights On"
         state: >
-            {% set n_people_bed = states.sensor.n_people_bed.state | int %}
+            {% set someone_asleep_in_master = states.binary_sensor.carla_in_bed.state == 'on' or states.binary_sensor.graeme_in_bed.state == 'on' %}
+            {% set inez_asleep_in_bedroom = states.input_boolean.baby_in_bed_inez.state == 'on' %}
             {% set bedroom_lights = states.group.bedroom_lights.state %}
             {% set home = states.group.all_people.state %}
             {% set lights_out = states.input_boolean.lights_out.state %}
@@ -601,7 +602,8 @@ template:
             and living_room_bright == 'off'
             and (end_time < current_time < start_time or guest_mode == "on")
             and not(tv_media_state == 'playing' and deactivate_theatre_mode == 'off')
-            and not(n_people_bed > 0 and bedroom_lights == 'off') }}
+            and not( (someone_asleep_in_master and bedroom_lights == 'off')
+                    or (inez_asleep_in_bedroom) )}}
 
       - name: "Carla Home"
         state: >
