@@ -63,23 +63,25 @@
     target:
       entity_id: input_boolean.vacation_mode
 
+### Bedroom Light Switches and Ambient Noise - Automations ###
 
-- alias: Long Press Bedroom Light Switch
+- alias: Long Press Master Bedroom Light Switch
   trigger:
     platform: event
     event_type: esphome.bedroom_light_long
   action:
   - service: esphome.bedroom_light_led_blink
-#   - service: light.toggle
-#     entity_id: light.bedside_light
-#   - service: light.turn_off
-#     entity_id: light.bedroom_light
-#   - service: light.turn_off
-#     entity_id: light.ensuite_bath_light
-  - service: input_boolean.turn_on
+  - service: light.turn_off
     target:
-      entity_id: input_boolean.baby_in_bed_master
-- alias: Turn off Baby in Bed Master
+      entity_id: light.bedroom_light
+  - service: script.loop_local_audio
+    data:
+      media_player: "media_player.bedroom_assistant"
+      title: "Rain Sounds"
+      file_name: "rain_3600.mp3"
+      volume_level: 0.6
+
+- alias: Turn off Ambient Sounds in Master Bedroom
   trigger:
     - platform: state
       entity_id: light.bedroom_light
@@ -88,28 +90,9 @@
       entity_id: group.all_people
       to: 'off'
   action:
-  - service: input_boolean.turn_off
-    target:
-      entity_id: input_boolean.baby_in_bed_master
-- alias: Turn on Ambient Sounds in Master Bedroom
-  trigger:
-    - platform: state
-      entity_id: input_boolean.baby_in_bed_master
-      to: 'on'
-  action:
-  - service: script.turn_on
-    entity_id: script.rain_sounds_master
-- alias: Turn off Ambient Sounds in Master Bedroom
-  trigger:
-    - platform: state
-      entity_id: input_boolean.baby_in_bed_master
-      to: 'off'
-  action:
   - service: media_player.turn_off
     target:
-      entity_id: media_player.bedroom_speaker
-  - service: script.turn_off
-    entity_id: script.rain_sounds_master
+      entity_id: media_player.bedroom_assistant
 
 - alias: Long Press Man Cave Switch
   trigger:
@@ -117,9 +100,13 @@
     event_type: esphome.man_cave_light_long
   action:
   - service: esphome.man_cave_light_led_blink
+  - service: light.turn_off
+    target:
+      entity_id: light.man_cave_light
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.baby_in_bed_inez
+
 - alias: Turn off Baby in Bed Inez Room
   trigger:
     - platform: state
@@ -132,14 +119,20 @@
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.baby_in_bed_inez
+
 - alias: Turn on Ambient Sounds in Inez Bedroom
   trigger:
     - platform: state
       entity_id: input_boolean.baby_in_bed_inez
       to: 'on'
   action:
-  - service: script.turn_on
-    entity_id: script.rain_sounds_inez
+  - service: script.loop_local_audio
+    data:
+      media_player: "media_player.inezs_speaker"
+      title: "Rain Sounds"
+      file_name: "rain_3600.mp3"
+      volume_level: 0.6
+
 - alias: Turn off Ambient Sounds in Inez Bedroom
   trigger:
     - platform: state
@@ -148,9 +141,7 @@
   action:
   - service: media_player.turn_off
     target:
-      entity_id: media_player.man_cave_speaker
-  - service: script.turn_off
-    entity_id: script.rain_sounds_inez
+      entity_id: media_player.inezs_speaker
 
 ### Light Automations ###
 

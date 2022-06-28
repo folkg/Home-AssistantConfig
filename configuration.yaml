@@ -454,7 +454,7 @@ template:
       - name: "reading_lamp_brightness"
         state: >
             {% set max_brightness = 100 %}
-            {% set min_brightness = 50 %}
+            {% set min_brightness = 40 %}
             {% set start_time = today_at("19:00") %}
             {% set end_time = today_at("21:00") %}
             {% set wakeup_time = today_at("6:00") %}
@@ -490,7 +490,7 @@ template:
       - name: "TV_ambient_brightness"
         state: >
             {% set max_brightness = 100 %}
-            {% set min_brightness = 40 %}
+            {% set min_brightness = 30 %}
             {% set start_time = today_at("19:00") %}
             {% set end_time = today_at("21:00") %}
             {% set wakeup_time = today_at("6:00") %}
