@@ -55,20 +55,20 @@ test_christmas_music:
       entity_id: media_player.spotify_graeme_folk
       media_content_id: 'https://open.spotify.com/playlist/37i9dQZF1DWTCHbho2Bfok'
 
-loop_local_audio:
-    alias: Loop Local Audio
+loop_audio_master_bedroom:
+    alias: Loop Audio Master Bedroom
     sequence:
       - service: media_player.volume_set
         data:
           volume_level: '{{volume_level}}'
         target:
-          entity_id: '{{media_player}}'
+          entity_id: media_player.bedroom_assistant
       - repeat:
           until:
             - condition: template
               value_template: >-
-                {{ state_attr(media_player, 'media_title') != title 
-                or states(media_player) != 'idle' }}
+                {{ state_attr('media_player.bedroom_assistant', 'media_title') != title 
+                or states('media_player.bedroom_assistant') != 'idle' }}
           sequence:
             - service: media_player.play_media
               data:
@@ -77,14 +77,49 @@ loop_local_audio:
                   title: '{{title}}'
                 media_content_id: "/media/local/{{file_name}}"
               target:
-                entity_id: '{{media_player}}'
+                entity_id: media_player.bedroom_assistant
             - delay:
                 seconds: 10
             - wait_for_trigger:
                 - platform: template
                   value_template: >-
-                    {{ state_attr(media_player, 'media_title') == title 
-                    and is_state(media_player, 'idle') }}
+                    {{ state_attr('media_player.bedroom_assistant', 'media_title') == title 
+                    and is_state('media_player.bedroom_assistant', 'idle') }}
+              continue_on_timeout: false
+              timeout: '01:01:01'
+    mode: restart
+    icon: 'mdi:cast'
+
+loop_audio_inez_bedroom:
+    alias: Loop Audio Inez's Bedroom
+    sequence:
+      - service: media_player.volume_set
+        data:
+          volume_level: '{{volume_level}}'
+        target:
+          entity_id: media_player.inezs_speaker
+      - repeat:
+          until:
+            - condition: template
+              value_template: >-
+                {{ state_attr('media_player.inezs_speaker', 'media_title') != title 
+                or states('media_player.inezs_speaker') != 'idle' }}
+          sequence:
+            - service: media_player.play_media
+              data:
+                media_content_type: music
+                extra:
+                  title: '{{title}}'
+                media_content_id: "/media/local/{{file_name}}"
+              target:
+                entity_id: media_player.inezs_speaker
+            - delay:
+                seconds: 10
+            - wait_for_trigger:
+                - platform: template
+                  value_template: >-
+                    {{ state_attr('media_player.inezs_speaker', 'media_title') == title 
+                    and is_state('media_player.inezs_speaker', 'idle') }}
               continue_on_timeout: false
               timeout: '01:01:01'
     mode: restart
