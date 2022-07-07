@@ -530,18 +530,18 @@ template:
             {% set start_time = today_at("21:00") %}
             {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
-            {% set south_brightness = states.sensor.south_window_brightness.state | float %}
+            {% set south_brightness = states.sensor.south_window_brightness.state | float(30000) %}
             {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
-            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float %}
-            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float + states.sensor.living_room_temperature.state | float) / 2 %}
+            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float(30) %}
+            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             
             {{ (sun_elevation < -1 or current_time > start_time)
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (130 < sun_azimuth < 245)
+            or ( (124 < sun_azimuth < 245)
                 and (sun_elevation < 30
-                    or (main_area_temperature > 22 and outdoor_temperature > 15)
+                    or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
             ) }}
         delay_off:
@@ -555,8 +555,8 @@ template:
             {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
             {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
-            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float %}
-            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float + states.sensor.living_room_temperature.state | float) / 2 %}
+            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float(30) %}
+            {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             
@@ -564,7 +564,7 @@ template:
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (sun_azimuth > 200)
                 and (sun_elevation < 40
-                  or (main_area_temperature > 22 and outdoor_temperature > 15)
+                  or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
             ) }}
         delay_off:
