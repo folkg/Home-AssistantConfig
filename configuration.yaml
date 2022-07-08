@@ -224,7 +224,13 @@ template:
         unit_of_measurement: "°C"
         state: >
             {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | default(0) %}
-            {{ midea_temp }}
+            {% set self = states.sensor.midea_temperature.state | float(0) %}
+
+            {% if midea_temp <= 0 %}
+              {{ self }}
+            {% else %}
+              {{ midea_temp }}
+            {% endif %}
 
   - sensor:
       - name: "Master Bedroom Temperature"
@@ -232,13 +238,29 @@ template:
         device_class: temperature
         unit_of_measurement: "°C"
         state: >
-            {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | default(0) %}
-            {% set multi_sensor_temp = states.sensor.bedroom_temperature.state | default(0) %}
+            {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | float(0) %}
+            {% set multi_sensor_temp = states.sensor.bedroom_temperature.state | float(0) %}
+            {% set self = states.sensor.master_bedroom_temperature.state | float(multi_sensor_temp) %}
             
-            {% if midea_temp == 0 %}
-              {{ multi_sensor_temp }}
+            {% if midea_temp <= 0 %}
+              {{ self }}
             {% else %}
               {{ midea_temp }}
+            {% endif %}
+  - sensor:
+      - name: "Outdoor Temperature"
+        unique_id: "outdoor_temperature"
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: >
+            {% set midea_outdoor_temp = states.sensor.bedroom_ac_outdoor_temperature.state | float(0) %}
+            {% set internet_outdoor_temp = states.sensor.home_realfeel_temperature.state | float %}
+            {% set self = states.sensor.outdoor_temperature.state | float(internet_outdoor_temp) %}
+            
+            {% if midea_outdoor_temp <= 0 %}
+              {{ self }}
+            {% else %}
+              {{ midea_outdoor_temp }}
             {% endif %}
 
     # Kitchen Lights Setting
@@ -532,7 +554,7 @@ template:
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
             {% set south_brightness = states.sensor.south_window_brightness.state | float(30000) %}
             {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
-            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float(30) %}
+            {% set outdoor_temperature = states.sensor.outdoor_temperature.state | float(30) %}
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
@@ -555,7 +577,7 @@ template:
             {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
             {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
-            {% set outdoor_temperature = states.sensor.home_realfeel_temperature.state | float(30) %}
+            {% set outdoor_temperature = states.sensor.outdoor_temperature.state | float(30) %}
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}

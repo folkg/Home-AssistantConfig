@@ -511,7 +511,7 @@
 - alias: Open Windows
   trigger:
     - platform: numeric_state
-      entity_id: sensor.home_realfeel_temperature
+      entity_id: sensor.outdoor_temperature
       below: sensor.house_temperature
   action:
     - choose:
@@ -525,7 +525,7 @@
             title: "It's getting cool outside"
             message: >-
               ❄️️ Time to open up the windows. {{
-              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.outdoor_temperature.state }}°C outside, {{
               states.sensor.house_temperature.state }}°C inside."
     - choose:
       - conditions:
@@ -538,13 +538,13 @@
             title: "It's getting cool outside"
             message: >-
               ❄️️ Hi Schnookie! Time to open up the windows. {{
-              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.outdoor_temperature.state }}°C outside, {{
               states.sensor.house_temperature.state }}°C inside.""
   id: 6961bf7a13eb49cb8fcb421830be7ee4
 - alias: Close Windows
   trigger:
     - platform: numeric_state
-      entity_id: sensor.home_realfeel_temperature
+      entity_id: sensor.outdoor_temperature
       above: sensor.house_temperature
   action:
     - choose:
@@ -558,7 +558,7 @@
             title: "It's getting hot outside"
             message: >-
               🔥 Time to close all the windows. {{
-              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.outdoor_temperature.state }}°C outside, {{
               states.sensor.house_temperature.state }}°C inside.
     - choose:
       - conditions:
@@ -571,7 +571,7 @@
             title: "It's getting hot outside"
             message: >-
               🔥 Hi Schnookie! Time to close all the windows. {{
-              states.sensor.home_realfeel_temperature.state }}°C outside, {{
+              states.sensor.outdoor_temperature.state }}°C outside, {{
               states.sensor.house_temperature.state }}°C inside.
   id: 85fc51f1f71b4bc19f90842dc4a0b4e4
   
