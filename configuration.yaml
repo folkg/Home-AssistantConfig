@@ -226,12 +226,13 @@ template:
             {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | default(0) %}
             {% set self = states.sensor.midea_temperature.state | float(0) %}
 
-            {% if midea_temp <= 0 %}
-              {{ self }}
-            {% else %}
+            {% if midea_temp > 0 %}
               {{ midea_temp }}
+            {% else %}
+              {{ self }}
             {% endif %}
 
+    ## TODO: If the media has been offline for a longtime, can we make the backup sensor the default?
   - sensor:
       - name: "Master Bedroom Temperature"
         unique_id: "master_bedroom_temperature"
@@ -242,10 +243,10 @@ template:
             {% set multi_sensor_temp = states.sensor.bedroom_temperature.state | float(0) %}
             {% set self = states.sensor.master_bedroom_temperature.state | float(multi_sensor_temp) %}
             
-            {% if midea_temp <= 0 %}
-              {{ self }}
-            {% else %}
+            {% if midea_temp > 0 %}
               {{ midea_temp }}
+            {% else %}
+              {{ self }}
             {% endif %}
   - sensor:
       - name: "Outdoor Temperature"
@@ -254,13 +255,12 @@ template:
         unit_of_measurement: "°C"
         state: >
             {% set midea_outdoor_temp = states.sensor.bedroom_ac_outdoor_temperature.state | float(0) %}
-            {% set internet_outdoor_temp = states.sensor.home_realfeel_temperature.state | float %}
-            {% set self = states.sensor.outdoor_temperature.state | float(internet_outdoor_temp) %}
+            {% set self = states.sensor.outdoor_temperature.state | float(0) %}
             
-            {% if midea_outdoor_temp <= 0 %}
-              {{ self }}
-            {% else %}
+            {% if midea_outdoor_temp > 1 %}
               {{ midea_outdoor_temp }}
+            {% else %}
+              {{ self }}
             {% endif %}
 
     # Kitchen Lights Setting
@@ -561,7 +561,7 @@ template:
             
             {{ (sun_elevation < -1 or current_time > start_time)
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (124 < sun_azimuth < 245)
+            or ( (114 < sun_azimuth < 255)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
