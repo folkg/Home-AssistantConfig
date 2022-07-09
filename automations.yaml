@@ -510,9 +510,8 @@
 
 - alias: Open Windows
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.outdoor_temperature
-      below: sensor.house_temperature
+    - platform: template
+      value_template: "{{ states.sensor.outdoor_temperature.state | float > states.sensor.house_temperature.state | float + 1 }}"
   action:
     - choose:
       - conditions:
@@ -543,9 +542,8 @@
   id: 6961bf7a13eb49cb8fcb421830be7ee4
 - alias: Close Windows
   trigger:
-    - platform: numeric_state
-      entity_id: sensor.outdoor_temperature
-      above: sensor.house_temperature
+    - platform: template
+      value_template: "{{ states.sensor.outdoor_temperature.state | float < states.sensor.house_temperature.state | float - 1 }}"
   action:
     - choose:
       - conditions:
