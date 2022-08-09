@@ -428,10 +428,48 @@ template:
     - platform: time_pattern
       minutes: "/5"
   - sensor:
-      - name: "kitchen_counter_lights_brightness"
+      - name: "kitchen_counter_brightness"
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 25 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+
+  - sensor:
+      - name: "kitchen_cabinet_brightness"
+        state: >
+            {% set max_brightness = 45 %}
+            {% set min_brightness = 0 %}
+            {% set start_time = today_at("19:00") %}
+            {% set end_time = today_at("21:00") %}
+            {% set wakeup_time = today_at("6:00") %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+                {{ max_brightness }}
+            {% elif current_time > end_time or current_time < wakeup_time %}
+                {{ min_brightness }}
+            {% else %}
+                {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+
+  - sensor:
+      - name: "kitchen_island_brightness"
+        state: >
+            {% set max_brightness = 55 %}
+            {% set min_brightness = 0 %}
             {% set start_time = today_at("19:00") %}
             {% set end_time = today_at("21:00") %}
             {% set wakeup_time = today_at("6:00") %}
@@ -727,37 +765,3 @@ light:
   - platform: switch
     name: "Bedside Light"
     entity_id: switch.globe_plug
-
-#Scenes
-scene:
-  - name: Main Area Dim
-    entities:
-      light.kitchen_table:
-        state: "on"
-        brightness: 80
-      light.liquor_lights:
-        state: "on"
-        brightness: 50
-      light.reading_lamp:
-        state: "off"
-        #brightness: 105
-
-  - name: Kitchen Bright
-    entities:
-      light.kitchen_cabinet_lights:
-        state: "on"
-        brightness: 105
-      light.kitchen_island_lights:
-        state: "on"
-        brightness: 140
-      light.kitchen_counter_lights:
-        state: "on"
-        brightness: 255
-
-  - name: Kitchen Dim
-    entities:
-      light.kitchen_counter_lights:
-        state: "on"
-        brightness: 130
-      light.kitchen_cabinet_lights: false
-      light.kitchen_island_lights: false

@@ -186,14 +186,12 @@
   - platform: webhook
     webhook_id: 3fce37b7644b4e5e88079ca1a215c74b
   - platform: template
-    value_template: '{% set home = states.sensor.n_people_home.state | int > 0 %}
-      {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))
-      %} {% set current_time = now().strftime(''%T'') %}
+    value_template: >
+        {% set home = states.sensor.n_people_home.state | int > 0 %}
+        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
+        {% set current_time = now().strftime(''%T'') %}
 
-      {{ home and not(everyone_in_bed) and ( ''09:00:00'' < current_time < ''20:00:00''
-      ) }}
-
-      '
+        {{ home and not(everyone_in_bed) and ( ''09:00:00'' < current_time < ''20:00:00'') }}
   action:
   - service: input_boolean.turn_off
     target:
@@ -257,12 +255,8 @@
   action:
   - service: light.turn_on
     data:
-      rgbw_color: '[{{ states.sensor.tv_ambient_red.state }},0,0,255]
-
-        '
-      brightness_pct: '{{ states.sensor.tv_ambient_brightness.state }}
-
-        '
+      rgbw_color: '[{{ states.sensor.tv_ambient_red.state }},0,0,255]'
+      brightness_pct: '{{ states.sensor.tv_ambient_brightness.state }}'
       effect: none
     target:
       entity_id: light.tv_lights
@@ -317,26 +311,18 @@
   action:
   - service: light.turn_on
     data:
-      brightness_pct: '{{ states.sensor.kitchen_table_brightness.state }}
-
-        '
+      brightness_pct: '{{ states.sensor.kitchen_table_brightness.state }}'
     target:
       entity_id: light.kitchen_table
   - service: light.turn_on
     data:
-      brightness_pct: '{{ states.sensor.liquor_lights_brightness.state }}
-
-        '
+      brightness_pct: '{{ states.sensor.liquor_lights_brightness.state }}'
     target:
       entity_id: light.liquor_lights
   - service: light.turn_on
     data:
-      rgbww_color: '[255,255,255,{{ states.sensor.reading_lamp_cold_white.state }},255]
-
-        '
-      brightness_pct: '{{ states.sensor.reading_lamp_brightness.state }}
-
-        '
+      rgbww_color: '[255,255,255,{{ states.sensor.reading_lamp_cold_white.state }},255]'
+      brightness_pct: '{{ states.sensor.reading_lamp_brightness.state }}'
     target:
       entity_id: light.reading_lamp
   id: 487dcdecbfa6477b96b81f4124f7b1ee
@@ -346,9 +332,20 @@
     entity_id: sensor.main_area_lights_setting
     to: dim
   action:
-  - service: scene.turn_on
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ [states.sensor.kitchen_table_brightness.state | float, 30] | min }}'
     target:
-      entity_id: scene.main_area_dim
+      entity_id: light.kitchen_table
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ [states.sensor.liquor_lights_brightness.state | float, 20] | min }}'
+    target:
+      entity_id: light.liquor_lights
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.reading_lamp
   id: 84bb6318d2514dae823dbf4cc1de13b1
 - alias: Change Main Area Lights to Off
   trigger:
@@ -369,9 +366,21 @@
     entity_id: sensor.kitchen_lights_setting
     to: bright
   action:
-  - service: scene.turn_on
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ states.sensor.kitchen_counter_brightness.state }}'
     target:
-      entity_id: scene.kitchen_bright
+      entity_id: light.kitchen_counter_lights
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ states.sensor.kitchen_cabinet_brightness.state }}'
+    target:
+      entity_id: light.kitchen_cabinet_lights
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ states.sensor.kitchen_island_brightness.state }}'
+    target:
+      entity_id: light.kitchen_island_lights
   id: e2f9655f9b974eeea6fe52a3a5a5cc67
 - alias: Change Kitchen Lights to Dim
   trigger:
@@ -379,9 +388,16 @@
     entity_id: sensor.kitchen_lights_setting
     to: dim
   action:
-  - service: scene.turn_on
+  - service: light.turn_on
+    data:
+      brightness_pct: '{{ [states.sensor.kitchen_counter_brightness.state | float, 50] | min }}'
     target:
-      entity_id: scene.kitchen_dim
+      entity_id: light.kitchen_counter_lights
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.kitchen_cabinet_lights
+      - light.kitchen_island_lights
   id: 483feddacb6b4ec6919ecf2e457c3721
 - alias: Change Kitchen Lights to Off
   trigger:
