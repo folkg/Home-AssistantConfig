@@ -89,6 +89,24 @@ google_assistant:
     - scene
     - script
 
+# input_datetime values abused as constants for templates
+input_datetime:
+  start_time:
+    name: Start Dimming Lights
+    has_date: false
+    has_time: true
+    initial: '19:00'
+  end_time:
+    name: Stop Dimming Lights
+    has_date: false
+    has_time: true
+    initial: '21:00'
+  wakeup_time:
+    name: Wakeup Time
+    has_date: false
+    has_time: true
+    initial: '06:00'
+
 media_player:
   # Use the Python ADB implementation
   - platform: androidtv
@@ -227,20 +245,6 @@ template:
               {{ self }}
             {% endif %}
 
-  - sensor:
-      - name: "AC On Time"
-        unique_id: "ac_on_time"
-        device_class: timestamp
-        state: >
-            {% set midea_temp = states.sensor.midea_temperature.state | float(0) %}
-            {% set desired_temp = 20 | float %}
-            {% set bedtime = today_at("22:00") %}
-            
-            {% set time_delta = 3.02 * (desired_temp ** 2 - midea_temp ** 2) - 177 * (desired_temp - midea_temp) %}
-            
-            {{ bedtime - timedelta(minutes=time_delta) }}
-
-
     ## TODO: If the media has been offline for a longtime, can we make the backup sensor the default?
   - sensor:
       - name: "Master Bedroom Temperature"
@@ -248,7 +252,7 @@ template:
         device_class: temperature
         unit_of_measurement: "°C"
         state: >
-            {% set midea_temp = states.climate.bedroom_ac.attributes.current_temperature | float(0) %}
+            {% set midea_temp = states.sensor.midea_temperature.state | float(0) %}
             {% set multi_sensor_temp = states.sensor.bedroom_temperature.state | float(0) %}
             {% set self = states.sensor.master_bedroom_temperature.state | float(multi_sensor_temp) %}
             
@@ -257,6 +261,20 @@ template:
             {% else %}
               {{ self }}
             {% endif %}
+
+  - sensor:
+      - name: "AC On Time"
+        unique_id: "ac_on_time"
+        device_class: timestamp
+        state: >
+            {% set bedroom_temp = states.sensor.master_bedroom_temperature.state | float(0) %}
+            {% set desired_temp = 19 | float %}
+            {% set bedtime = today_at("22:00") %}
+            
+            {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2) - 177 * (desired_temp - bedroom_temp) %}
+            
+            {{ bedtime - timedelta(minutes=time_delta) }}
+
   - sensor:
       - name: "Outdoor Temperature"
         unique_id: "outdoor_temperature"
@@ -282,8 +300,8 @@ template:
             {% set kitchen_bright = states.binary_sensor.kitchen_bright.state %}
             {% set kitchen_motion = states.binary_sensor.kitchen_motion.state %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set noon = today_at("12:00") %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
@@ -432,9 +450,9 @@ template:
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 25 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -451,9 +469,9 @@ template:
         state: >
             {% set max_brightness = 45 %}
             {% set min_brightness = 0 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -470,9 +488,9 @@ template:
         state: >
             {% set max_brightness = 55 %}
             {% set min_brightness = 0 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -488,9 +506,9 @@ template:
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 0 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -506,9 +524,9 @@ template:
         state: >
             {% set max_brightness = 31 %}
             {% set min_brightness = 13 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -524,9 +542,9 @@ template:
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 40 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -542,9 +560,9 @@ template:
         state: >
             {% set max_brightness = 255 %}
             {% set min_brightness = 0 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -560,9 +578,9 @@ template:
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 30 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -578,9 +596,9 @@ template:
         state: >
             {% set max_red = 128 %}
             {% set min_red = 0 %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("21:00") %}
-            {% set wakeup_time = today_at("6:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
 
@@ -596,7 +614,7 @@ template:
       - name: "Close South Window"
         state: >
             {% set current_time = now() %}
-            {% set start_time = today_at("21:00") %}
+            {% set start_time = today_at(states.input_datetime.end_time.state) %}
             {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
             {% set south_brightness = states.sensor.south_window_brightness.state | float(30000) %}
@@ -620,7 +638,7 @@ template:
       - name: "Close West Window"
         state: >
             {% set current_time = now() %}
-            {% set start_time = today_at("21:00") %}
+            {% set start_time = today_at(states.input_datetime.end_time.state) %}
             {% set sun_azimuth = states.sun.sun.attributes.azimuth | float %}
             {% set sun_elevation = states.sun.sun.attributes.elevation | float %}
             {% set outdoor_brightness = states.sensor.outdoor_brightness.state | float(0) %}
@@ -661,15 +679,15 @@ template:
             {% set living_room_bright = states.binary_sensor.living_room_bright.state %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
-            {% set start_time = today_at("19:00") %}
-            {% set end_time = today_at("7:00") %}
+            {% set start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.binary_sensor.guest_mode.state %}
             
             {{ home == 'on'
             and lights_out == 'off'
             and living_room_bright == 'off'
-            and (end_time < current_time < start_time or guest_mode == "on")
+            and (wakeup_time < current_time < start_time or guest_mode == "on")
             and not(tv_media_state == 'playing' and deactivate_theatre_mode == 'off')
             and not( (someone_asleep_in_master and bedroom_lights == 'off')
                     or (inez_asleep_in_bedroom) )}}
