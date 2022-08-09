@@ -89,11 +89,6 @@ google_assistant:
     - scene
     - script
 
-#for Google Calendar
-google:
-  client_id: !secret google_calendar_client_id
-  client_secret: !secret google_calendar_client_secret
-
 media_player:
   # Use the Python ADB implementation
   - platform: androidtv
@@ -231,6 +226,20 @@ template:
             {% else %}
               {{ self }}
             {% endif %}
+
+  - sensor:
+      - name: "AC On Time"
+        unique_id: "ac_on_time"
+        device_class: timestamp
+        state: >
+            {% set midea_temp = states.sensor.midea_temperature.state | float(0) %}
+            {% set desired_temp = 20 | float %}
+            {% set bedtime = today_at("22:00") %}
+            
+            {% set time_delta = 3.02 * (desired_temp ** 2 - midea_temp ** 2) - 177 * (desired_temp - midea_temp) %}
+            
+            {{ bedtime - timedelta(minutes=time_delta) }}
+
 
     ## TODO: If the media has been offline for a longtime, can we make the backup sensor the default?
   - sensor:
@@ -561,7 +570,7 @@ template:
             
             {{ (sun_elevation < -1 or current_time > start_time)
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (100 < sun_azimuth < 260)
+            or ( (100 < sun_azimuth < 264)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )

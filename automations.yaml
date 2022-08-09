@@ -10,9 +10,11 @@
     above: 0
   action:
   - service: notify.filenotify
-    data_template: 
-      message: ",{{ states.sun.sun.attributes.elevation }},{{ states.sun.sun.attributes.azimuth }},{{ states.sensor.south_window_brightness.state }},{{ states.sensor.west_window_brightness.state }}"
-
+    data_template:
+      message: ',{{ states.sun.sun.attributes.elevation }},{{ states.sun.sun.attributes.azimuth
+        }},{{ states.sensor.south_window_brightness.state }},{{ states.sensor.west_window_brightness.state
+        }}'
+  id: 9d7099e9329447aa9e11d20ce9400a7c
 - alias: Merry Christmas Carla
   trigger:
   - entity_id: binary_sensor.carla_home
@@ -27,7 +29,6 @@
   - service: script.turn_on
     entity_id: script.merry_christmas
   id: e992b988667f41d5b163ab89160b22b0
-
 - alias: Phone Sends Input Boolean (wifi connect/disconnect, charging/not charging)
   trigger:
     platform: webhook
@@ -37,7 +38,6 @@
     data_template:
       entity_id: '{{ trigger.json.entity_id }}'
   id: 3c81c2ad7f794bb5a2b5f92bf7dc7cdc
-
 - alias: Vacation Mode On
   trigger:
   - entity_id: group.all_people
@@ -53,6 +53,7 @@
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.vacation_mode
+  id: 8d1e7506dc37433084ed72466b3fb409
 - alias: Vacation Mode Off
   trigger:
   - entity_id: group.all_people
@@ -62,9 +63,7 @@
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.vacation_mode
-
-### Bedroom Light Switches and Ambient Noise - Automations ###
-
+  id: 177093918a524b6e9520b40545d9473b
 - alias: Long Press Master Bedroom Light Switch
   trigger:
     platform: event
@@ -76,18 +75,18 @@
       entity_id: light.bedroom_light
   - service: script.loop_audio_master_bedroom
     data:
-      title: "Rain Sounds"
-      file_name: "rain_3600.mp3"
+      title: Rain Sounds
+      file_name: rain_3600.mp3
       volume_level: 0.65
-
+  id: ed1162ba823543feae8e248b3db06be3
 - alias: Turn off Ambient Sounds in Master Bedroom
   trigger:
-    - platform: state
-      entity_id: light.bedroom_light
-      to: 'on'
-    - platform: state
-      entity_id: group.all_people
-      to: 'off'
+  - platform: state
+    entity_id: light.bedroom_light
+    to: 'on'
+  - platform: state
+    entity_id: group.all_people
+    to: 'off'
   action:
   - service: media_player.turn_off
     target:
@@ -95,7 +94,7 @@
   - service: script.turn_off
     target:
       entity_id: script.loop_audio_master_bedroom
-
+  id: 49c1526834904841ab551d36b6d58c62
 - alias: Long Press Man Cave Switch
   trigger:
     platform: event
@@ -108,63 +107,57 @@
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.baby_in_bed_inez
-
+  - choose:
+    - conditions: "{{ (now().hour < 18 and states.media_player.inezs_speaker.state
+        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
+        | default(\"null\") == \"Lullaby\"\n}}\n"
+      sequence:
+      - service: script.loop_audio_inez_bedroom
+        data:
+          title: Rain Sounds
+          file_name: rain_3600.mp3
+          volume_level: 0.5
+    - conditions: "{{ (now().hour >= 18 and states.media_player.inezs_speaker.state
+        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
+        | default(\"null\") == \"Rain Sounds\"\n}}\n"
+      sequence:
+      - service: script.loop_audio_inez_bedroom
+        data:
+          title: Lullaby
+          file_name: lullaby.m4a
+          volume_level: 0.5
+  id: d45848df75424e44b449b0b66cc48704
 - alias: Turn off Baby in Bed Inez Room
   trigger:
-    - platform: state
-      entity_id: light.man_cave_light
-      to: 'on'
-    - platform: state
-      entity_id: group.all_people
-      to: 'off'
+  - platform: state
+    entity_id: light.man_cave_light
+    to: 'on'
+  - platform: state
+    entity_id: group.all_people
+    to: 'off'
   action:
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.baby_in_bed_inez
-
-- alias: Turn on Ambient Sounds in Inez Bedroom
-  trigger:
-    - platform: state
-      entity_id: input_boolean.baby_in_bed_inez
-      to: 'on'
-  action:
-  - service: script.loop_audio_inez_bedroom
-    data:
-      title: "Rain Sounds"
-      file_name: "rain_3600.mp3"
-      volume_level: 0.5
-
-- alias: Turn off Ambient Sounds in Inez Bedroom
-  trigger:
-    - platform: state
-      entity_id: input_boolean.baby_in_bed_inez
-      to: 'off'
-  action:
   - service: media_player.turn_off
     target:
       entity_id: media_player.inezs_speaker
   - service: script.turn_off
     target:
       entity_id: script.loop_audio_inez_bedroom
-
-### Light Automations ###
-
+  id: d6593714f21b416596f62feded840754
 - alias: Lights Out Activated
   trigger:
-  # everyone in bed after 8PM (and before 9AM) with the bedroom lights off
   - platform: template
-    value_template: >
-        {% set home = states.sensor.n_people_home.state | int > 0 %}
-        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
-        {% set bedroom_lights = states.group.bedroom_lights.state %}
-        {% set current_time = now().strftime('%T') %}
+    value_template: '{% set home = states.sensor.n_people_home.state | int > 0 %}
+      {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))
+      %} {% set bedroom_lights = states.group.bedroom_lights.state %} {% set current_time
+      = now().strftime(''%T'') %}
 
-        {{ home
-        and everyone_in_bed
-        and bedroom_lights == 'off'
-        and ( current_time > '20:00:00' or current_time < '09:00:00' )
-        }}
-  # Long pressing the hallway lights
+      {{ home and everyone_in_bed and bedroom_lights == ''off'' and ( current_time
+      > ''20:00:00'' or current_time < ''09:00:00'' ) }}
+
+      '
   - platform: event
     event_type: esphome.hallway_lights_long
   action:
@@ -174,47 +167,38 @@
       entity_id: input_boolean.lights_out
   - service: media_player.turn_off
     entity_id: media_player.android_tv
-
+  id: 8bebeb92be2f43678d59f0007bc72f5e
 - alias: Lights Out De-activated
   trigger:
-  # Someone comes home
   - entity_id: binary_sensor.graeme_home
     platform: state
     to: 'on'
   - entity_id: binary_sensor.carla_home
     platform: state
     to: 'on'
-  # One of the main area light switches is turned on (hallway, kitchen table, liquor)
   - entity_id: group.main_area_switches
     platform: state
     to: 'on'
-  # The TV is switched on
   - platform: state
     entity_id: sensor.sony_bravia_state
     from:
-      - 'off'
-  # Graeme's alarm went off at home
+    - 'off'
   - platform: webhook
     webhook_id: 3fce37b7644b4e5e88079ca1a215c74b
-  # If someone (or everyone) is out of bed after 9AM
   - platform: template
-    value_template: >
-        {% set home = states.sensor.n_people_home.state | int > 0 %}
-        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
-        {% set current_time = now().strftime('%T') %}
-        
-        {{ home
-        and not(everyone_in_bed)
-        and ( '09:00:00' < current_time < '20:00:00' )
-        }}
+    value_template: '{% set home = states.sensor.n_people_home.state | int > 0 %}
+      {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))
+      %} {% set current_time = now().strftime(''%T'') %}
+
+      {{ home and not(everyone_in_bed) and ( ''09:00:00'' < current_time < ''20:00:00''
+      ) }}
+
+      '
   action:
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.lights_out
-
-  ## TV Lights ##
-
-  # Create default scene for the TV bias lights when hassio starts
+  id: 569aee3f3c3347c1a0021a1c753300a0
 - alias: Default TV Lights Scene
   trigger:
     platform: homeassistant
@@ -225,12 +209,15 @@
       scene_id: tv_lights_coloured
       entities:
         light.tv_lights:
-          state: "on"
-          effect: "none"
-          rgbw_color: [255,0,255,100]
+          state: 'on'
+          effect: none
+          rgbw_color:
+          - 255
+          - 0
+          - 255
+          - 100
           brightness: 160
-
-  # Save to Scene automation when the lights are manually changed
+  id: c8714ed6b2094414834a1fe8773fbe39
 - alias: Save the TV Bias Lights to Scene
   trigger:
     platform: state
@@ -238,72 +225,74 @@
   condition:
   - condition: state
     entity_id: sensor.tv_lights_setting
-    state: "coloured"
+    state: coloured
   action:
   - service: scene.create
     data:
       scene_id: tv_lights_coloured
       snapshot_entities:
       - light.tv_lights
-
+  id: 9d9d5787e705478cbfe4ffb371c868d1
 - alias: Change TV Lights to Coloured (Bias Lighting)
   trigger:
   - platform: state
     entity_id: sensor.tv_lights_setting
-    to: 'coloured'
+    to: coloured
   action:
   - service: scene.turn_on
     target:
       entity_id: scene.tv_lights_coloured
-
+  id: 4e03509096994c5a869b77e374934d2a
 - alias: Change TV Lights to White (Normal Lighting)
   trigger:
   - platform: state
     entity_id: sensor.tv_lights_setting
-    to: 'white'
+    to: white
   - platform: state
     entity_id: sensor.tv_ambient_brightness
   condition:
   - condition: state
     entity_id: sensor.tv_lights_setting
-    state: "white"
+    state: white
   action:
   - service: light.turn_on
     data:
-      rgbw_color: >
-        [{{ states.sensor.tv_ambient_red.state }},0,0,255]
-      brightness_pct: >
-        {{ states.sensor.tv_ambient_brightness.state }}
-      effect: "none"
+      rgbw_color: '[{{ states.sensor.tv_ambient_red.state }},0,0,255]
+
+        '
+      brightness_pct: '{{ states.sensor.tv_ambient_brightness.state }}
+
+        '
+      effect: none
     target:
       entity_id: light.tv_lights
-
+  id: 8ca8ce7778b94bd187eb467045b5e806
 - alias: Change TV Lights to Leafs Lights
   trigger:
   - platform: state
     entity_id: sensor.tv_lights_setting
-    to: 'leafs'
+    to: leafs
   action:
   - service: light.turn_on
     target:
       entity_id: light.tv_lights
     data:
-      effect: "Leafs Lights"
+      effect: Leafs Lights
       brightness: 240
-
+  id: f8702cfa80e44f14a80fafdd9844357d
 - alias: Change TV Lights to Flames Lights
   trigger:
   - platform: state
     entity_id: sensor.tv_lights_setting
-    to: 'flames'
+    to: flames
   action:
   - service: light.turn_on
     target:
       entity_id: light.tv_lights
     data:
-      effect: "Flames Stripes"
+      effect: Flames Stripes
       brightness: 240
-
+  id: 2271f77dd5a34802bc853dc57df6f90c
 - alias: Change TV Lights to Off
   trigger:
   - platform: state
@@ -313,50 +302,54 @@
   - service: light.turn_off
     target:
       entity_id: light.tv_lights
-
+  id: d673e313670c4ae69f6d033ae7f1d167
 - alias: Change Main Area Lights to Bright
   trigger:
   - platform: state
     entity_id: sensor.main_area_lights_setting
-    to: 'bright'
+    to: bright
   - platform: state
     entity_id: sensor.reading_lamp_cold_white
   condition:
   - condition: state
     entity_id: sensor.main_area_lights_setting
-    state: "bright"
+    state: bright
   action:
   - service: light.turn_on
     data:
-      brightness_pct: >
-        {{ states.sensor.kitchen_table_brightness.state }}
+      brightness_pct: '{{ states.sensor.kitchen_table_brightness.state }}
+
+        '
     target:
       entity_id: light.kitchen_table
   - service: light.turn_on
     data:
-      brightness_pct: >
-        {{ states.sensor.liquor_lights_brightness.state }}
+      brightness_pct: '{{ states.sensor.liquor_lights_brightness.state }}
+
+        '
     target:
       entity_id: light.liquor_lights
   - service: light.turn_on
     data:
-      rgbww_color: >
-        [255,255,255,{{ states.sensor.reading_lamp_cold_white.state }},255]
-      brightness_pct: >
-        {{ states.sensor.reading_lamp_brightness.state }}
+      rgbww_color: '[255,255,255,{{ states.sensor.reading_lamp_cold_white.state }},255]
+
+        '
+      brightness_pct: '{{ states.sensor.reading_lamp_brightness.state }}
+
+        '
     target:
       entity_id: light.reading_lamp
-
+  id: 487dcdecbfa6477b96b81f4124f7b1ee
 - alias: Change Main Area Lights to Dim
   trigger:
   - platform: state
     entity_id: sensor.main_area_lights_setting
-    to: 'dim'
+    to: dim
   action:
   - service: scene.turn_on
     target:
       entity_id: scene.main_area_dim
-
+  id: 84bb6318d2514dae823dbf4cc1de13b1
 - alias: Change Main Area Lights to Off
   trigger:
   - platform: state
@@ -366,30 +359,30 @@
   - service: light.turn_off
     target:
       entity_id:
-        - light.kitchen_table
-        - light.liquor_lights
-        - light.reading_lamp
-
+      - light.kitchen_table
+      - light.liquor_lights
+      - light.reading_lamp
+  id: cd42871a2a654072b0f8689ebb3f54f8
 - alias: Change Kitchen Lights to Bright
   trigger:
   - platform: state
     entity_id: sensor.kitchen_lights_setting
-    to: 'bright'
+    to: bright
   action:
   - service: scene.turn_on
     target:
       entity_id: scene.kitchen_bright
-
+  id: e2f9655f9b974eeea6fe52a3a5a5cc67
 - alias: Change Kitchen Lights to Dim
   trigger:
   - platform: state
     entity_id: sensor.kitchen_lights_setting
-    to: 'dim'
+    to: dim
   action:
   - service: scene.turn_on
     target:
       entity_id: scene.kitchen_dim
-
+  id: 483feddacb6b4ec6919ecf2e457c3721
 - alias: Change Kitchen Lights to Off
   trigger:
   - platform: state
@@ -399,10 +392,10 @@
   - service: light.turn_off
     target:
       entity_id:
-        - light.kitchen_cabinet_lights
-        - light.kitchen_counter_lights
-        - light.kitchen_island_lights
-
+      - light.kitchen_cabinet_lights
+      - light.kitchen_counter_lights
+      - light.kitchen_island_lights
+  id: 70dfe93ad8e84105b282d60f4c38b588
 - alias: Change Hallway Lights to On
   trigger:
   - platform: state
@@ -412,7 +405,7 @@
   - service: light.turn_on
     target:
       entity_id: light.hallway_lights
-
+  id: 56a215cdb57e489e8ab9a5383e4a35ec
 - alias: Change Hallway Lights to Off
   trigger:
   - platform: state
@@ -422,7 +415,7 @@
   - service: light.turn_off
     target:
       entity_id: light.hallway_lights
-
+  id: d2d3a0c4b8934bdbadf285d81b9278e2
 - alias: Change Balcony Lights to On
   trigger:
   - platform: state
@@ -432,7 +425,7 @@
   - service: light.turn_on
     target:
       entity_id: light.balcony_lights
-
+  id: 6c00e954927f4076b5f5234aaf3ef45d
 - alias: Change Balcony Lights to Off
   trigger:
   - platform: state
@@ -442,12 +435,7 @@
   - service: light.turn_off
     target:
       entity_id: light.balcony_lights
-
-### End Light Automations ###
-
-
-### Start Curtain Automations ###
-
+  id: b648951ec15245abb5d80cd8266980c2
 - alias: Close West Curtain
   trigger:
   - platform: state
@@ -462,6 +450,7 @@
     target:
       entity_id:
       - cover.west_window
+  id: e16a81b1f8134cfca30338a7b0ec6e71
 - alias: Open West Curtain
   trigger:
   - platform: state
@@ -476,7 +465,7 @@
     target:
       entity_id:
       - cover.west_window
-
+  id: 395d3d1094e2442c9dc653ef668a0b83
 - alias: Close South Curtain
   trigger:
   - platform: state
@@ -491,6 +480,7 @@
     target:
       entity_id:
       - cover.south_window
+  id: 1a407ae3fb6a4a8f9fc7f54f91a6b9a9
 - alias: Open South Curtain
   trigger:
   - platform: state
@@ -505,77 +495,65 @@
     target:
       entity_id:
       - cover.south_window
-
-### End Curtain Automations ###
-
+  id: 1b57025b4c6f4c11b3fd30845f3ceb40
 - alias: Open Windows
   trigger:
-    - platform: template
-      value_template: "{{ states.sensor.outdoor_temperature.state | float < states.sensor.house_temperature.state | float - 0.5 }}"
+  - platform: template
+    value_template: '{{ states.sensor.outdoor_temperature.state | float < states.sensor.house_temperature.state
+      | float - 0.5 }}'
   action:
-    - choose:
-      - conditions:
-        - condition: state
-          entity_id: binary_sensor.graeme_home
-          state: 'on'
-        sequence:
-        - service: notify.mobile_app_graeme_pixel_6
-          data:
-            title: "It's getting cool outside"
-            message: >-
-              ❄️️ Time to open up the windows. {{
-              states.sensor.outdoor_temperature.state }}°C outside, {{
-              states.sensor.house_temperature.state }}°C inside."
-    - choose:
-      - conditions:
-        - condition: state
-          entity_id: binary_sensor.carla_home
-          state: 'on'
-        sequence:
-        - service: notify.mobile_app_carla_s_phone
-          data:
-            title: "It's getting cool outside"
-            message: >-
-              ❄️️ Hi Schnookie! Time to open up the windows. {{
-              states.sensor.outdoor_temperature.state }}°C outside, {{
-              states.sensor.house_temperature.state }}°C inside.""
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.graeme_home
+        state: 'on'
+      sequence:
+      - service: notify.mobile_app_graeme_pixel_6
+        data:
+          title: It's getting cool outside
+          message: ❄️️ Time to open up the windows. {{ states.sensor.outdoor_temperature.state
+            }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.carla_home
+        state: 'on'
+      sequence:
+      - service: notify.mobile_app_carla_s_phone
+        data:
+          title: It's getting cool outside
+          message: ❄️️ Hi Schnookie! Time to open up the windows. {{ states.sensor.outdoor_temperature.state
+            }}°C outside, {{ states.sensor.house_temperature.state }}°C inside.""
   id: 6961bf7a13eb49cb8fcb421830be7ee4
 - alias: Close Windows
   trigger:
-    - platform: template
-      value_template: "{{ states.sensor.outdoor_temperature.state | float > states.sensor.house_temperature.state | float + 1 }}"
+  - platform: template
+    value_template: '{{ states.sensor.outdoor_temperature.state | float > states.sensor.house_temperature.state
+      | float + 1 }}'
   action:
-    - choose:
-      - conditions:
-        - condition: state
-          entity_id: binary_sensor.graeme_home
-          state: 'on'
-        sequence:
-        - service: notify.mobile_app_graeme_pixel_6
-          data:
-            title: "It's getting hot outside"
-            message: >-
-              🔥 Time to close all the windows. {{
-              states.sensor.outdoor_temperature.state }}°C outside, {{
-              states.sensor.house_temperature.state }}°C inside.
-    - choose:
-      - conditions:
-        - condition: state
-          entity_id: binary_sensor.carla_home
-          state: 'on'
-        sequence:
-        - service: notify.mobile_app_carla_s_phone
-          data:
-            title: "It's getting hot outside"
-            message: >-
-              🔥 Hi Schnookie! Time to close all the windows. {{
-              states.sensor.outdoor_temperature.state }}°C outside, {{
-              states.sensor.house_temperature.state }}°C inside.
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.graeme_home
+        state: 'on'
+      sequence:
+      - service: notify.mobile_app_graeme_pixel_6
+        data:
+          title: It's getting hot outside
+          message: "\U0001F525 Time to close all the windows. {{ states.sensor.outdoor_temperature.state
+            }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: binary_sensor.carla_home
+        state: 'on'
+      sequence:
+      - service: notify.mobile_app_carla_s_phone
+        data:
+          title: It's getting hot outside
+          message: "\U0001F525 Hi Schnookie! Time to close all the windows. {{ states.sensor.outdoor_temperature.state
+            }}°C outside, {{ states.sensor.house_temperature.state }}°C inside."
   id: 85fc51f1f71b4bc19f90842dc4a0b4e4
-  
-
-### Switch Press Automations ###
-
 - alias: Long Press Bathroom Light Switch
   trigger:
   - platform: event
@@ -616,7 +594,6 @@
   - service: switch.turn_on
     entity_id: switch.bathroom_fan
   id: 4679a7dbee964879aac5c2382b77e644
-
 - alias: Turn off Ensuite light with bedroom lights (if no motion)
   trigger:
   - platform: state
@@ -630,7 +607,6 @@
   - service: light.turn_off
     entity_id: light.ensuite_bath_light
   id: 122f7afdbfc042adb5961b436e780f0f
-  
 - alias: Long Press Globe Plug Button
   trigger:
     platform: event
@@ -643,9 +619,6 @@
   - service: light.turn_off
     entity_id: light.ensuite_bath_light
   id: 631a63d2a8a341588f36f005817eb7f1
-
-### End Switch Press Automations ###
-
 - id: 4ffa1b995e244dd89aa6c65a35116f71
   alias: Ensuite Bath Light Timeout
   trigger:
@@ -658,7 +631,6 @@
   - service: light.turn_off
     entity_id: light.ensuite_bath_light
   mode: single
-
 - id: e102151cdc834ec1aa82d27defd40a74
   alias: Announce Graeme's arrival
   trigger:
@@ -681,7 +653,6 @@
       entity_id: media_player.kitchen_speaker
       cache: true
   mode: single
-
 - id: 36df66c10ad8427e976e40d858e56773
   alias: Announce Carla's arrival
   trigger:
@@ -703,7 +674,6 @@
     entity_id: media_player.kitchen_speaker
     service: tts.google_translate_say
   mode: single
-
 - alias: Turn on Hallway Lights if Arriving with Media Playing
   trigger:
   - entity_id: binary_sensor.graeme_home
@@ -725,7 +695,6 @@
   - service: light.turn_on
     entity_id: light.hallway_lights
   id: ad2d6f7628d54c9ca5a267ad477439dd
-
 - alias: Turn Everything off when Everyone Leaves
   trigger:
   - entity_id: group.all_people
@@ -750,10 +719,7 @@
     entity_id: all
   - service: switch.turn_off
     entity_id: all
-#   - service: media_player.turn_off
-#     entity_id: media_player.living_room_soundbar_2
   id: cc91877029344bf799853133ea5fb553
-
 - alias: Turn on Soundbar with TV
   description: since the TV won't turn on the soundbar by itself, we'll do it with
     Home Assistant!
@@ -765,16 +731,15 @@
   - service: media_player.turn_on
     entity_id: media_player.living_room_soundbar_2
   id: a65fc9aa311d46a081e8efdc29288858
-  
 - id: '1590037256306'
   alias: Turn Off TV if Inactive
   trigger:
   - entity_id: media_player.android_tv
     platform: state
     to:
-      - 'off'
-      - 'standby'
-    for: 0:15:00 #to match the living room motion 15 minute delayed off
+    - 'off'
+    - standby
+    for: 0:15:00
   - entity_id: binary_sensor.living_room_motion
     platform: state
     to: 'off'
@@ -783,8 +748,8 @@
     for: 0:15:00
     condition: state
     state:
-      - 'off'
-      - 'standby'
+    - 'off'
+    - standby
   - entity_id: binary_sensor.living_room_motion
     condition: state
     state: 'off'
@@ -792,7 +757,6 @@
   - entity_id: media_player.android_tv
     service: media_player.turn_off
   mode: single
-
 - alias: Calgary Tower Lights
   trigger:
   - platform: time
@@ -808,7 +772,7 @@
       variables:
         calendar_description: '{{ states.calendar.calgary_tower_lighting.attributes.description
           }}'
-
+  id: f2d0fbe352214966b97873f3c2d952c6
 - alias: Change Lamps to Match TV Lights
   trigger:
     platform: state
@@ -828,7 +792,6 @@
       white_value: 0
       transition: 2
   id: 12bde2f55cd44d8aa8e9b838a013043c
-
 - id: '1591059091546'
   alias: Set Initial Volume on Condo Speakers
   trigger:
@@ -849,8 +812,6 @@
     data:
       entity_id: media_player.chromecastaudio1260
       volume_level: 0.1
-
-### Robot Vacuum Automations ###
 - alias: Clean room
   description: Start Roborock room cleaning triggered from Google Assistant (IFTTT)
   trigger:
@@ -861,16 +822,14 @@
     entity_id: vacuum.roborock_s4
     data_template:
       area: '{{ trigger.json.area }}'
-
+  id: 427647c63fce42528684e0081015bbac
 - id: '1600707789992'
   alias: Roborock go to garbage after cleaning
   trigger:
   - entity_id: vacuum.roborock_s4
     platform: state
     from: cleaning
- #   to: returning
   condition:
-  # Only if it cleans more than 15m2, we don't need it waiting at the garbage after every small clean
   - condition: template
     value_template: '{{ states.vacuum.roborock_s4.attributes.cleaned_area > 15 }}'
   action:
@@ -879,3 +838,32 @@
   - delay: 3
   - data: {}
     service: script.go_to_garbage
+- id: '1660000199883'
+  alias: Turn AC On
+  description: ''
+  trigger:
+  - platform: time
+    at: sensor.ac_on_time
+  - entity_id: binary_sensor.graeme_home
+    platform: state
+    to: 'on'
+  - entity_id: binary_sensor.carla_home
+    platform: state
+    to: 'on'
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.n_people_home
+    above: '0'
+  - condition: time
+    after: sensor.ac_on_time
+  action:
+  - device_id: 5720389bd9e23f540465d94df910c128
+    domain: climate
+    entity_id: climate.bedroom_ac
+    type: set_hvac_mode
+    hvac_mode: auto
+  - service: notify.mobile_app_graeme_pixel_6
+    data:
+      title: Time to turn on the Air Conditioner
+      message: Time to turn on the Air Conditioner
+  mode: single
