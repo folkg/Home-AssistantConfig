@@ -95,37 +95,45 @@
     target:
       entity_id: script.loop_audio_master_bedroom
   id: 49c1526834904841ab551d36b6d58c62
-- alias: Long Press Man Cave Switch
+- alias: Long Press Inez Room Switch
   trigger:
     platform: event
     event_type: esphome.inez_room_light_long
   action:
   - service: esphome.inez_room_light_led_blink
+  - choose:
+    - conditions: >
+        {{ (now().hour < 18 and states.media_player.inezs_speaker.state == 'off')
+            or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Lullaby"
+        }}
+      sequence:
+      - service: script.turn_off
+        target:
+          entity_id: script.loop_audio_inez_bedroom
+      - service: script.loop_audio_inez_bedroom
+        data:
+          title: Rain Sounds
+          file_name: rain_3600.mp3
+          volume_level: 0.5
+    - conditions: >
+        {{ (now().hour >= 18 and states.media_player.inezs_speaker.state == 'off')
+            or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Rain Sounds"
+        }}
+      sequence:
+      - service: script.turn_off
+        target:
+          entity_id: script.loop_audio_inez_bedroom
+      - service: script.loop_audio_inez_bedroom
+        data:
+          title: Lullaby
+          file_name: lullaby.m4a
+          volume_level: 0.5
   - service: light.turn_off
     target:
       entity_id: light.inez_room_light
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.baby_in_bed_inez
-  - choose:
-    - conditions: "{{ (now().hour < 18 and states.media_player.inezs_speaker.state
-        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
-        | default(\"null\") == \"Lullaby\"\n}}\n"
-      sequence:
-      - service: script.loop_audio_inez_bedroom
-        data:
-          title: Rain Sounds
-          file_name: rain_3600.mp3
-          volume_level: 0.5
-    - conditions: "{{ (now().hour >= 18 and states.media_player.inezs_speaker.state
-        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
-        | default(\"null\") == \"Rain Sounds\"\n}}\n"
-      sequence:
-      - service: script.loop_audio_inez_bedroom
-        data:
-          title: Lullaby
-          file_name: lullaby.m4a
-          volume_level: 0.5
   id: d45848df75424e44b449b0b66cc48704
 - alias: Turn off Baby in Bed Inez Room
   trigger:
@@ -186,12 +194,13 @@
   - platform: webhook
     webhook_id: 3fce37b7644b4e5e88079ca1a215c74b
   - platform: template
+  ##TODO: Can we set these time values as constants with the other ones?
     value_template: >
         {% set home = states.sensor.n_people_home.state | int > 0 %}
         {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
-        {% set current_time = now().strftime(''%T'') %}
+        {% set current_time = now().strftime('%T') %}
 
-        {{ home and not(everyone_in_bed) and ( ''09:00:00'' < current_time < ''20:00:00'') }}
+        {{ home and not(everyone_in_bed) and ( '09:00:00' < current_time < '20:00:00') }}
   action:
   - service: input_boolean.turn_off
     target:

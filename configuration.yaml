@@ -449,7 +449,7 @@ template:
       - name: "kitchen_counter_brightness"
         state: >
             {% set max_brightness = 100 %}
-            {% set min_brightness = 25 %}
+            {% set min_brightness = 15 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
@@ -772,7 +772,7 @@ light:
     name: "Bathroom Shower Light"
     entity_id: switch.bathroom_shower_light
   - platform: switch
-    name: "Man Cave Light"
+    name: "Inez's Room Light"
     entity_id: switch.inez_room_light
   - platform: switch
     name: "Hallway Lights"
