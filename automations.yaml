@@ -365,6 +365,12 @@
   - platform: state
     entity_id: sensor.kitchen_lights_setting
     to: bright
+  - platform: state
+    entity_id: sensor.kitchen_counter_brightness
+  condition:
+  - condition: state
+    entity_id: sensor.kitchen_lights_setting
+    state: bright
   action:
   - service: light.turn_on
     data:
@@ -387,6 +393,12 @@
   - platform: state
     entity_id: sensor.kitchen_lights_setting
     to: dim
+  - platform: state
+    entity_id: sensor.kitchen_counter_brightness
+  condition:
+  - condition: state
+    entity_id: sensor.kitchen_lights_setting
+    state: dim
   action:
   - service: light.turn_on
     data:
