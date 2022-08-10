@@ -84,21 +84,31 @@
     target:
       entity_id: input_boolean.vacation_mode
   id: 177093918a524b6e9520b40545d9473b
-- alias: Long Press Master Bedroom Light Switch
+- alias: Long Press Master Bedroom Switch
+  mode: restart
   trigger:
     platform: event
-    event_type: esphome.bedroom_light_long
+    event_type: esphome.bedroom-light_long
   action:
   - service: esphome.bedroom_light_led_blink
   - service: light.turn_off
     target:
       entity_id: light.bedroom_light
-  - service: script.loop_audio_master_bedroom
-    data:
-      title: Rain Sounds
-      file_name: rain_3600.mp3
-      volume_level: 0.65
-  id: ed1162ba823543feae8e248b3db06be3
+  - choose:
+    - conditions: >
+        {{ states.media_player.bedroom_assistant.attributes.media_title | default("null") == "Rain Sounds" }}
+      sequence:
+      - service: script.loop_audio_master_bedroom
+        data:
+          title: Lullaby
+          file_name: lullaby.m4a
+          volume_level: 0.5
+    default:
+    - service: script.loop_audio_master_bedroom
+      data:
+        title: Rain Sounds
+        file_name: rain_3600.mp3
+        volume_level: 0.65
 - alias: Turn off Ambient Sounds in Master Bedroom
   trigger:
   - platform: state
@@ -116,20 +126,24 @@
       entity_id: script.loop_audio_master_bedroom
   id: 49c1526834904841ab551d36b6d58c62
 - alias: Long Press Inez Room Switch
+  mode: restart
   trigger:
     platform: event
-    event_type: esphome.inez_room_light_long
+    event_type: esphome.inez-room-light_long
   action:
   - service: esphome.inez_room_light_led_blink
+  - service: light.turn_off
+    target:
+      entity_id: light.inez_room_light
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.baby_in_bed_inez
   - choose:
     - conditions: >
         {{ (now().hour < 18 and states.media_player.inezs_speaker.state == 'off')
             or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Lullaby"
         }}
       sequence:
-      - service: script.turn_off
-        target:
-          entity_id: script.loop_audio_inez_bedroom
       - service: script.loop_audio_inez_bedroom
         data:
           title: Rain Sounds
@@ -140,20 +154,12 @@
             or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Rain Sounds"
         }}
       sequence:
-      - service: script.turn_off
-        target:
-          entity_id: script.loop_audio_inez_bedroom
       - service: script.loop_audio_inez_bedroom
         data:
           title: Lullaby
           file_name: lullaby.m4a
           volume_level: 0.5
-  - service: light.turn_off
-    target:
-      entity_id: light.inez_room_light
-  - service: input_boolean.turn_on
-    target:
-      entity_id: input_boolean.baby_in_bed_inez
+
   id: d45848df75424e44b449b0b66cc48704
 - alias: Turn off Baby in Bed Inez Room
   trigger:

@@ -778,7 +778,7 @@ light:
     name: "Bathroom Shower Light"
     entity_id: switch.bathroom_shower_light
   - platform: switch
-    name: "Inez's Room Light"
+    name: "Inez Room Light"
     entity_id: switch.inez_room_light
   - platform: switch
     name: "Hallway Lights"
