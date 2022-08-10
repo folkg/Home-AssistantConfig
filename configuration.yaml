@@ -577,7 +577,7 @@ template:
       - name: "TV_ambient_brightness"
         state: >
             {% set max_brightness = 100 %}
-            {% set min_brightness = 30 %}
+            {% set min_brightness = 25 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
@@ -761,7 +761,7 @@ device_tracker:
 light:
   - platform: switch
     name: "Bedroom Light"
-    entity_id: switch.bedroom_light
+    entity_id: switch.bedroom-light
   - platform: switch
     name: "Ensuite Bath Light"
     entity_id: switch.ensuite_bath_light
@@ -773,7 +773,7 @@ light:
     entity_id: switch.bathroom_shower_light
   - platform: switch
     name: "Man Cave Light"
-    entity_id: switch.man_cave_light
+    entity_id: switch.inez-room-light
   - platform: switch
     name: "Hallway Lights"
     entity_id: switch.hallway_lights
