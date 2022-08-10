@@ -761,7 +761,7 @@ device_tracker:
 light:
   - platform: switch
     name: "Bedroom Light"
-    entity_id: switch.bedroom-light
+    entity_id: switch.bedroom_light
   - platform: switch
     name: "Ensuite Bath Light"
     entity_id: switch.ensuite_bath_light
@@ -773,7 +773,7 @@ light:
     entity_id: switch.bathroom_shower_light
   - platform: switch
     name: "Man Cave Light"
-    entity_id: switch.inez-room-light
+    entity_id: switch.inez_room_light
   - platform: switch
     name: "Hallway Lights"
     entity_id: switch.hallway_lights
