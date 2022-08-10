@@ -89,6 +89,22 @@ google_assistant:
     - scene
     - script
 
+input_boolean:
+  baby_in_bed_master:
+    name: 'Baby is in Bed Master Bedroom'
+    icon: mdi:baby
+  baby_in_bed_inez:
+    name: 'Baby is in Bed Inezs Room'
+    icon: mdi:baby
+  lights_out:
+  guest_mode:
+    name: 'Guest Mode'
+    icon: mdi:wallet-travel
+  deactivate_theatre_mode:
+  vacation_mode:
+    name: 'Vacation Mode'
+    icon: mdi:beach
+
 # input_datetime values abused as constants for templates
 input_datetime:
   start_time:
@@ -304,7 +320,7 @@ template:
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set noon = today_at("12:00") %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if kitchen_bright == 'off' and home == 'on' %}
               {% if lights_out == 'on' %}
@@ -454,7 +470,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -473,7 +489,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -492,7 +508,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -510,7 +526,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -528,7 +544,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -546,7 +562,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -564,7 +580,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -582,7 +598,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
@@ -600,7 +616,7 @@ template:
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
 
             {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ min_red }}
@@ -682,7 +698,7 @@ template:
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
-            {% set guest_mode = states.binary_sensor.guest_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
             
             {{ home == 'on'
             and lights_out == 'off'
@@ -712,19 +728,6 @@ template:
             | selectattr('attributes.scanner', 'eq', 'UnifiDeviceScanner') | list | count
             - [states.device_tracker.carla_pixel_6, states.device_tracker.graeme_pixel_6, states.device_tracker.og_pixel, states.device_tracker.ideapad_laptop] 
             | selectattr('state', 'eq', 'home') | list | count) > 0 }}
-
-input_boolean:
-  baby_in_bed_master:
-    name: 'Baby is in Bed Master Bedroom'
-    icon: mdi:baby
-  baby_in_bed_inez:
-    name: 'Baby is in Bed Inezs Room'
-    icon: mdi:baby
-  lights_out:
-  deactivate_theatre_mode:
-  vacation_mode:
-    name: 'Vacation Mode'
-    icon: mdi:beach
 
 device_tracker:
   - platform: unifi_direct

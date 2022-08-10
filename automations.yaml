@@ -38,6 +38,26 @@
     data_template:
       entity_id: '{{ trigger.json.entity_id }}'
   id: 3c81c2ad7f794bb5a2b5f92bf7dc7cdc
+  
+- alias: Guest Mode On
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.guest_mode
+    to: "on"
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.guest_mode
+- alias: Guest Mode Off
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.guest_mode
+    to: "off"
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.guest_mode
+    
 - alias: Vacation Mode On
   trigger:
   - entity_id: group.all_people
@@ -46,7 +66,7 @@
     for:
       hours: 24
   condition:
-  - entity_id: binary_sensor.guest_mode
+  - entity_id: input_boolean.guest_mode
     condition: state
     state: 'off'
   action:
@@ -737,7 +757,7 @@
   - entity_id: group.all_people
     platform: state
     to: 'off'
-  - entity_id: binary_sensor.guest_mode
+  - entity_id: input_boolean.guest_mode
     platform: state
     to: 'off'
   condition:
@@ -745,7 +765,7 @@
     entity_id: group.all_people
     state: 'off'
   - condition: state
-    entity_id: binary_sensor.guest_mode
+    entity_id: input_boolean.guest_mode
     state: 'off'
   action:
   - service: media_player.media_stop
