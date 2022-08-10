@@ -639,14 +639,16 @@ template:
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
-            
-            {{ (sun_elevation < -1 or current_time > start_time)
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
+
+            {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (100 < sun_azimuth < 264)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
             ) }}
+            
         delay_off:
           minutes: 2
           seconds: 5
@@ -662,8 +664,9 @@ template:
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
             
-            {{ (sun_elevation < -1 or current_time > start_time)
+            {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (sun_azimuth > 200)
                 and (sun_elevation < 40
