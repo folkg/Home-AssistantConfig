@@ -1,0 +1,5 @@
+substitutions:
+  device_name: inez-room-light
+  friendly_name: Inez Room Light
+
+<<: !include kuled-k36-light-switch-common.yaml
