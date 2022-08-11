@@ -471,8 +471,12 @@ template:
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
             {% set current_time = now() %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
-
-            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+            {% set lights_out = states.input_boolean.lights_out.state %}
+            
+            
+            {% if lights_out == "on" %}
+                {{ 8}}
+            {% elif start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
             {% elif current_time > end_time or current_time < wakeup_time %}
                 {{ min_brightness }}
@@ -523,13 +527,18 @@ template:
         state: >
             {% set max_brightness = 100 %}
             {% set min_brightness = 0 %}
+            {% set mid_brightness = 30 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
+            {% set morning_off_time = wakeup_time + timedelta(hours = 4) %}
+            {% set afternoon_on_time = start_time - timedelta(hours = 2) %}
             {% set current_time = now() %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
 
-            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+            {% if afternoon_on_time > current_time > morning_off_time %}
+                {{ mid_brightness }}
+            {% elif start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
             {% elif current_time > end_time or current_time < wakeup_time %}
                 {{ min_brightness }}
