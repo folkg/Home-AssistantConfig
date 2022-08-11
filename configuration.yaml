@@ -484,7 +484,7 @@ template:
       - name: "kitchen_cabinet_brightness"
         state: >
             {% set max_brightness = 45 %}
-            {% set min_brightness = 0 %}
+            {% set min_brightness = 13 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
@@ -503,7 +503,7 @@ template:
       - name: "kitchen_island_brightness"
         state: >
             {% set max_brightness = 55 %}
-            {% set min_brightness = 0 %}
+            {% set min_brightness = 28 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
@@ -518,6 +518,7 @@ template:
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
             {% endif %}
 
+## TODO add wakeuptime + 4 hours, end time - 3 hours for 100%, down to 50% in between?
       - name: "kitchen_table_brightness"
         state: >
             {% set max_brightness = 100 %}
@@ -539,7 +540,7 @@ template:
       - name: "liquor_lights_brightness"
         state: >
             {% set max_brightness = 31 %}
-            {% set min_brightness = 13 %}
+            {% set min_brightness = 12 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}

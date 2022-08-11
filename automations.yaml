@@ -920,13 +920,13 @@
   - condition: time
     after: sensor.ac_on_time
   action:
-  - device_id: 5720389bd9e23f540465d94df910c128
-    domain: climate
-    entity_id: climate.bedroom_ac
-    type: set_hvac_mode
-    hvac_mode: auto
+  - service: climate.set_hvac_mode
+    data:
+      hvac_mode: cool
+    target:
+      entity_id: climate.bedroom_ac 
   - service: notify.mobile_app_graeme_pixel_6
     data:
       title: Time to turn on the Air Conditioner
-      message: Time to turn on the Air Conditioner
+      message: Get that room cool before bed!
   mode: single

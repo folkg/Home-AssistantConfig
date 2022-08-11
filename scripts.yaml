@@ -91,7 +91,7 @@ loop_audio_master_bedroom:
     icon: 'mdi:cast'
 
 loop_audio_inez_bedroom:
-    alias: Loop Audio Inez's Bedroom
+    alias: Loop Audio Inez Bedroom
     sequence:
       - service: media_player.volume_set
         data:
