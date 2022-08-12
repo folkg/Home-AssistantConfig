@@ -369,11 +369,6 @@
   action:
   - service: light.turn_on
     data:
-      brightness_pct: '{{ [states.sensor.kitchen_table_brightness.state | float, 30] | min }}'
-    target:
-      entity_id: light.kitchen_table
-  - service: light.turn_on
-    data:
       brightness_pct: '{{ [states.sensor.liquor_lights_brightness.state | float, 20] | min }}'
     target:
       entity_id: light.liquor_lights
@@ -381,6 +376,7 @@
     target:
       entity_id:
       - light.reading_lamp
+      - light.kitchen_table
   id: 84bb6318d2514dae823dbf4cc1de13b1
 - alias: Change Main Area Lights to Off
   trigger:

@@ -525,8 +525,8 @@ template:
 ## TODO add wakeuptime + 4 hours, end time - 3 hours for 100%, down to 50% in between?
       - name: "kitchen_table_brightness"
         state: >
-            {% set max_brightness = 100 %}
-            {% set min_brightness = 0 %}
+            {% set max_brightness = 60 %}
+            {% set min_brightness = 12 %}
             {% set mid_brightness = 30 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
@@ -549,7 +549,7 @@ template:
       - name: "liquor_lights_brightness"
         state: >
             {% set max_brightness = 31 %}
-            {% set min_brightness = 12 %}
+            {% set min_brightness = 13 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
             {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
