@@ -284,7 +284,7 @@ template:
         device_class: timestamp
         state: >
             {% set bedroom_temp = states.sensor.master_bedroom_temperature.state | float(0) %}
-            {% set desired_temp = 19 | float %}
+            {% set desired_temp = 21 | float %}
             {% set bedtime = today_at("22:00") %}
             
             {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2) - 177 * (desired_temp - bedroom_temp) %}
@@ -475,7 +475,7 @@ template:
             
             
             {% if lights_out == "on" %}
-                {{ 8}}
+                {{ 10 }}
             {% elif start_time > current_time > wakeup_time or guest_mode == "on" %}
                 {{ max_brightness }}
             {% elif current_time > end_time or current_time < wakeup_time %}
@@ -526,7 +526,7 @@ template:
       - name: "kitchen_table_brightness"
         state: >
             {% set max_brightness = 60 %}
-            {% set min_brightness = 12 %}
+            {% set min_brightness = 0 %}
             {% set mid_brightness = 30 %}
             {% set start_time = today_at(states.input_datetime.start_time.state) %}
             {% set end_time = today_at(states.input_datetime.end_time.state) %}
@@ -648,11 +648,14 @@ template:
             {% set outdoor_temperature = states.sensor.outdoor_temperature.state | float(30) %}
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
-            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
+            {% set deactivate_theatre_emode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
+            {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))%}
+            {% set ac_on = states.climate.bedroom_ac.state != 'off' %}
 
             {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
+            or (everyone_in_bed and ac_on)
             or ( (100 < sun_azimuth < 264)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
@@ -675,9 +678,12 @@ template:
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
+            {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))%}
+            {% set ac_on = states.climate.bedroom_ac.state != 'off' %}
             
             {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
+            or (everyone_in_bed and ac_on)
             or ( (sun_azimuth > 200)
                 and (sun_elevation < 40
                   or (main_area_temperature > 21 and outdoor_temperature > 10)
