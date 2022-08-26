@@ -283,13 +283,20 @@ template:
         unique_id: "ac_on_time"
         device_class: timestamp
         state: >
-            {% set bedroom_temp = states.sensor.master_bedroom_temperature.state | float(0) %}
+            {% set bedroom_temp = [states.sensor.midea_temperature.state | float(0), states.sensor.bedroom_temperature.state | float(0)] | max %}
             {% set desired_temp = 21 | float %}
             {% set bedtime = today_at("22:00") %}
-            
+            {% set ac_currently_on = states.binary_sensor.ac_on.state %}
+          
             {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2) - 177 * (desired_temp - bedroom_temp) %}
             
-            {{ bedtime - timedelta(minutes=time_delta) }}
+            {% if ac_currently_on %}
+              {{ as_datetime(states.sensor.ac_on_time.state) }}
+            {% elif time_delta < 0 %}
+              {{ as_datetime("9999-12-31 00:00:00-07:00")}}
+            {% else %}
+              {{ bedtime - timedelta(minutes=time_delta) }}
+            {% endif %}
 
   - sensor:
       - name: "Outdoor Temperature"
@@ -648,14 +655,11 @@ template:
             {% set outdoor_temperature = states.sensor.outdoor_temperature.state | float(30) %}
             {% set main_area_temperature = (states.sensor.kitchen_temperature.state | float(30) + states.sensor.living_room_temperature.state | float(30)) / 2 %}
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
-            {% set deactivate_theatre_emode = states.input_boolean.deactivate_theatre_mode.state %}
+            {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
-            {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))%}
-            {% set ac_on = states.climate.bedroom_ac.state != 'off' %}
-
+            
             {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or (everyone_in_bed and ac_on)
             or ( (100 < sun_azimuth < 264)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
@@ -678,12 +682,9 @@ template:
             {% set tv_media_state = states.sensor.sony_bravia_state.state %}
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
-            {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))%}
-            {% set ac_on = states.climate.bedroom_ac.state != 'off' %}
             
             {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or (everyone_in_bed and ac_on)
             or ( (sun_azimuth > 200)
                 and (sun_elevation < 40
                   or (main_area_temperature > 21 and outdoor_temperature > 10)
@@ -692,6 +693,15 @@ template:
         delay_off:
           minutes: 2
           seconds: 5
+
+        # TODO: Need to make this more foolproof - what if the temp is lower than desired temp and it goes backwards? What if the room gets cooler, time adjusts, and the AC shuts off?
+      - name: "AC On"
+        state: >
+            {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
+            {% set ac_off_time = today_at("06:15") %}
+
+            {{ (states.sensor.n_people_home.state | int(0) > 0)
+              and (now() > ac_on_time or now() < ac_off_time) }}
 
         # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
       - name: "Balcony Lights On"
