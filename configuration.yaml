@@ -338,7 +338,7 @@ template:
                 {% endif %}
               {% else %}
                 {% if (current_time < end_time or guest_mode == "on")
-                and ( (noon > current_time > wakeup_time and sun_elevation < 1) 
+                and ( (noon > current_time > wakeup_time and sun_elevation < 2) 
                     or kitchen_motion == 'on' ) %}
                   bright
                 {% else %}
@@ -698,10 +698,10 @@ template:
       - name: "AC On"
         state: >
             {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
-            {% set ac_off_time = today_at("06:15") %}
+            {% set ac_off_time = as_local((ac_on_time + timedelta(days=1))).replace(hour=6, minute=15, second=0) %}
 
             {{ (states.sensor.n_people_home.state | int(0) > 0)
-              and (now() > ac_on_time or now() < ac_off_time) }}
+              and (ac_off_time > now() > ac_on_time) }}
 
         # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
       - name: "Balcony Lights On"
