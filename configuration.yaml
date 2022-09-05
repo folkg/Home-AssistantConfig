@@ -97,6 +97,8 @@ input_boolean:
     name: 'Baby is in Bed Inezs Room'
     icon: mdi:baby
   lights_out:
+  ac_on:
+    name: 'AC On'
   guest_mode:
     name: 'Guest Mode'
     icon: mdi:wallet-travel
@@ -279,26 +281,6 @@ template:
             {% endif %}
 
   - sensor:
-      - name: "AC On Time"
-        unique_id: "ac_on_time"
-        device_class: timestamp
-        state: >
-            {% set bedroom_temp = [states.sensor.midea_temperature.state | float(0), states.sensor.bedroom_temperature.state | float(0)] | max %}
-            {% set desired_temp = 21 | float %}
-            {% set bedtime = today_at("22:00") %}
-            {% set ac_currently_on = states.binary_sensor.ac_on.state %}
-          
-            {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2) - 177 * (desired_temp - bedroom_temp) %}
-            
-            {% if ac_currently_on %}
-              {{ as_datetime(states.sensor.ac_on_time.state) }}
-            {% elif time_delta < 0 %}
-              {{ as_datetime("9999-12-31 00:00:00-07:00")}}
-            {% else %}
-              {{ bedtime - timedelta(minutes=time_delta) }}
-            {% endif %}
-
-  - sensor:
       - name: "Outdoor Temperature"
         unique_id: "outdoor_temperature"
         device_class: temperature
@@ -311,6 +293,31 @@ template:
               {{ midea_outdoor_temp }}
             {% else %}
               {{ self }}
+            {% endif %}
+
+  - sensor:
+      - name: "AC On Time"
+        unique_id: "ac_on_time"
+        device_class: timestamp
+        state: >
+            {% set ac_on = states.binary_sensor.ac_on.state %}
+            {% set bedroom_temp = [states.sensor.midea_temperature.state | float(0), states.sensor.bedroom_temperature.state | float(0)] | max %}
+            {% set desired_temp = 21 | float %}
+            {% set bedtime = today_at("22:00") %}
+            {% set ac_off_time = today_at("06:15") %}
+
+            {% if ac_on == 'on' %}
+              {% set this = states.sensor.ac_on_time.state %}
+              {{ this }}
+            {% elif bedroom_temp < desired_temp %}
+              {{ None }}
+            {% elif now() > bedtime or now() < ac_off_time %}
+              {{ now() }}
+            {% else %}
+              {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2)
+                  - 177 * (desired_temp - bedroom_temp) %}
+              {% set ac_on_time = bedtime - timedelta(minutes=time_delta) %}
+              {{ ac_on_time }}
             {% endif %}
 
     # Kitchen Lights Setting
@@ -694,14 +701,15 @@ template:
           minutes: 2
           seconds: 5
 
-        # TODO: Need to make this more foolproof - what if the temp is lower than desired temp and it goes backwards? What if the room gets cooler, time adjusts, and the AC shuts off?
       - name: "AC On"
         state: >
-            {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
-            {% set ac_off_time = as_local((ac_on_time + timedelta(days=1))).replace(hour=6, minute=15, second=0) %}
+            {% set ac_on_time = states.sensor.ac_on_time.state %}
+            {% set ac_off_time = today_at("06:15") %}
+            {% set this = states.binary_sensor.ac_on.state %}
+            {% set people_home = states.sensor.n_people_home.state | float(0) > 0 %}
 
-            {{ (states.sensor.n_people_home.state | int(0) > 0)
-              and (ac_off_time > now() > ac_on_time) }}
+            {{people_home and (ac_on_time is defined) and
+            (as_timestamp(now()) > as_timestamp(ac_on_time) or now() < ac_off_time)}}
 
         # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
       - name: "Balcony Lights On"
