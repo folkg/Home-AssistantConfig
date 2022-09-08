@@ -703,13 +703,13 @@ template:
 
       - name: "AC On"
         state: >
-            {% set ac_on_time = states.sensor.ac_on_time.state %}
-            {% set ac_off_time = today_at("06:15") %}
-            {% set this = states.binary_sensor.ac_on.state %}
+            {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
+            {% set ac_off_time = (ac_on_time if ac_on_time!= 'unknown' else today_at("06:15") + timedelta(days=1)).replace(hour=6, minute=15) %}
             {% set people_home = states.sensor.n_people_home.state | float(0) > 0 %}
 
-            {{people_home and (ac_on_time is defined) and
-            (as_timestamp(now()) > as_timestamp(ac_on_time) or now() < ac_off_time)}}
+            {{people_home
+              and (ac_on_time != 'unknown')
+              and (ac_on_time < now() < ac_off_time)}}
 
         # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
       - name: "Balcony Lights On"
