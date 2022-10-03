@@ -187,13 +187,13 @@ binary_sensor:
     name: "Living Room Bright"
     device_class: light
     entity_id: sensor.living_room_brightness
-    upper: 200
+    upper: 225
     hysteresis: 50
   - platform: threshold
     name: "Kitchen Bright"
     device_class: light
     entity_id: sensor.kitchen_brightness
-    upper: 175
+    upper: 200
     hysteresis: 50
     
 template:
@@ -665,7 +665,7 @@ template:
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
             
-            {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
+            {{ ((sun_elevation < -5 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (100 < sun_azimuth < 264)
                 and (sun_elevation < 30
@@ -690,7 +690,7 @@ template:
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
             
-            {{ ((sun_elevation < -1 or current_time > start_time) and guest_mode == 'off')
+            {{ ((sun_elevation < -5 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (sun_azimuth > 200)
                 and (sun_elevation < 40
@@ -704,7 +704,7 @@ template:
       - name: "AC On"
         state: >
             {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
-            {% set ac_off_time = (ac_on_time if ac_on_time!= 'unknown' else today_at("06:15") + timedelta(days=1)).replace(hour=6, minute=15) %}
+            {% set ac_off_time = (ac_on_time if ac_on_time not in ['unavailable','unknown'] else today_at("06:15") + timedelta(days=1)).replace(hour=6, minute=15) %}
             {% set people_home = states.sensor.n_people_home.state | float(0) > 0 %}
 
             {{people_home
