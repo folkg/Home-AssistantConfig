@@ -58,6 +58,17 @@ test_christmas_music:
 loop_audio_master_bedroom:
     alias: Loop Audio Master Bedroom
     sequence:
+      - if:
+          - alias: "Google Home is off"
+            condition: state
+            entity_id: media_player.bedroom_assistant
+            state: 'off'
+        then:
+          - service: media_player.volume_mute
+            data:
+              entity_id: media_player.bedroom_assistant
+              is_volume_muted: true
+        # set the volume and start looping the audio
       - service: media_player.volume_set
         data:
           volume_level: '{{volume_level}}'
@@ -78,6 +89,11 @@ loop_audio_master_bedroom:
                 media_content_id: "/media/local/{{file_name}}"
               target:
                 entity_id: media_player.bedroom_assistant
+            - wait_template: '{{ is_state(''media_player.bedroom_assistant'', ''playing'') }}'
+            - service: media_player.volume_mute
+              data:
+                entity_id: media_player.bedroom_assistant
+                is_volume_muted: false
             - delay:
                 seconds: 10
             - wait_for_trigger:
@@ -86,7 +102,7 @@ loop_audio_master_bedroom:
                     {{ state_attr('media_player.bedroom_assistant', 'media_title') == title 
                     and is_state('media_player.bedroom_assistant', 'idle') }}
               continue_on_timeout: false
-              timeout: '01:01:01'
+              timeout: '01:05:01'
     mode: restart
     icon: 'mdi:cast'
 
@@ -121,7 +137,7 @@ loop_audio_inez_bedroom:
                     {{ state_attr('media_player.inezs_speaker', 'media_title') == title 
                     and is_state('media_player.inezs_speaker', 'idle') }}
               continue_on_timeout: false
-              timeout: '01:01:01'
+              timeout: '01:05:01'
     mode: restart
     icon: 'mdi:cast'
 

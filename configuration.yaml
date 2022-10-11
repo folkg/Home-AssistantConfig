@@ -588,7 +588,7 @@ template:
             {% set current_time = now() %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
 
-            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}
+            {% if start_time > current_time > wakeup_time or guest_mode == "on" %}w
                 {{ max_brightness }}
             {% elif current_time > end_time or current_time < wakeup_time %}
                 {{ min_brightness }}
@@ -650,6 +650,8 @@ template:
                 {{(current_time - start_time) / (end_time - start_time) * (max_red - min_red) + min_red }}
             {% endif %}
 
+    #sun shines through south window when azimuth is between 100 and 264.
+    #until azimuth x and elevation y, the sun is blocked by buildings to the east (winter)
   - binary_sensor:
       - name: "Close South Window"
         state: >
@@ -692,7 +694,7 @@ template:
             
             {{ ((sun_elevation < -5 or current_time > start_time) and guest_mode == 'off')
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (sun_azimuth > 200)
+            or ( (sun_azimuth > 195)
                 and (sun_elevation < 40
                   or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
@@ -754,7 +756,7 @@ template:
 
       - name: "Graeme Home"
         state: >
-          {% set unifi_phone_tracker = states.device_tracker.graeme_pixel_6.state %}
+          {% set unifi_phone_tracker = states.device_tracker.pixel_6_graeme_unifi.state %}
           {% set ha_app_phone_tracker = states.sensor.graeme_pixel_6_wifi_connection.state %}
 
           {{ unifi_phone_tracker == "home" or ha_app_phone_tracker == "TheInternet24G"  }}
@@ -763,7 +765,7 @@ template:
         state: >
           {{ (states.device_tracker | selectattr('state', 'eq', 'home')
             | selectattr('attributes.scanner', 'eq', 'UnifiDeviceScanner') | list | count
-            - [states.device_tracker.carla_pixel_6, states.device_tracker.graeme_pixel_6, states.device_tracker.og_pixel, states.device_tracker.ideapad_laptop] 
+            - [states.device_tracker.carla_pixel_6, device_tracker.pixel_6_graeme_unifi, states.device_tracker.og_pixel, states.device_tracker.ideapad_laptop] 
             | selectattr('state', 'eq', 'home') | list | count) > 0 }}
 
 device_tracker:
@@ -772,7 +774,7 @@ device_tracker:
     username: !secret unifi_direct_username
     password: !secret unifi_direct_password
     interval_seconds: 120
-    consider_home: 360
+    consider_home: 180
     new_device_defaults:
         track_new_devices: true
 
