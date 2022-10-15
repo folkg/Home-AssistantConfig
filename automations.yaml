@@ -38,26 +38,26 @@
     data_template:
       entity_id: '{{ trigger.json.entity_id }}'
   id: 3c81c2ad7f794bb5a2b5f92bf7dc7cdc
-  
 - alias: Guest Mode On
   trigger:
   - platform: state
     entity_id: binary_sensor.guest_mode
-    to: "on"
+    to: 'on'
   action:
   - service: input_boolean.turn_on
     target:
       entity_id: input_boolean.guest_mode
+  id: a7788768692c419ea919f6c91fdf1ae0
 - alias: Guest Mode Off
   trigger:
   - platform: state
     entity_id: binary_sensor.guest_mode
-    to: "off"
+    to: 'off'
   action:
   - service: input_boolean.turn_off
     target:
       entity_id: input_boolean.guest_mode
-    
+  id: 82a1d7e4ab1646c7a5424ad56ed38807
 - alias: Vacation Mode On
   trigger:
   - entity_id: group.all_people
@@ -95,8 +95,10 @@
     target:
       entity_id: light.bedroom_light
   - choose:
-    - conditions: >
-        {{ states.media_player.bedroom_assistant.attributes.media_title | default("null") == "Rain Sounds" }}
+    - conditions: '{{ states.media_player.bedroom_assistant.attributes.media_title
+        | default("null") == "Rain Sounds" }}
+
+        '
       sequence:
       - service: script.loop_audio_master_bedroom
         data:
@@ -109,6 +111,7 @@
         title: Rain Sounds
         file_name: rain_3600.mp3
         volume_level: 0.65
+  id: eb11ff72ca924b92bd9f30aa6f7e5765
 - alias: Turn off Ambient Sounds in Master Bedroom
   trigger:
   - platform: state
@@ -139,27 +142,24 @@
     target:
       entity_id: input_boolean.baby_in_bed_inez
   - choose:
-    - conditions: >
-        {{ (now().hour < 18 and states.media_player.inezs_speaker.state == 'off')
-            or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Lullaby"
-        }}
+    - conditions: "{{ (now().hour < 18 and states.media_player.inezs_speaker.state
+        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
+        | default(\"null\") == \"Lullaby\"\n}}\n"
       sequence:
       - service: script.loop_audio_inez_bedroom
         data:
           title: Rain Sounds
           file_name: rain_3600.mp3
           volume_level: 0.55
-    - conditions: >
-        {{ (now().hour >= 18 and states.media_player.inezs_speaker.state == 'off')
-            or states.media_player.inezs_speaker.attributes.media_title | default("null") == "Rain Sounds"
-        }}
+    - conditions: "{{ (now().hour >= 18 and states.media_player.inezs_speaker.state
+        == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
+        | default(\"null\") == \"Rain Sounds\"\n}}\n"
       sequence:
       - service: script.loop_audio_inez_bedroom
         data:
           title: Lullaby
           file_name: lullaby.m4a
           volume_level: 0.4
-
   id: d45848df75424e44b449b0b66cc48704
 - alias: Turn off Baby in Bed Inez Room
   trigger:
@@ -220,13 +220,14 @@
   - platform: webhook
     webhook_id: 3fce37b7644b4e5e88079ca1a215c74b
   - platform: template
-  ##TODO: Can we set these time values as constants with the other ones?
-    value_template: >
-        {% set home = states.sensor.n_people_home.state | int > 0 %}
-        {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state)) %}
-        {% set current_time = now().strftime('%T') %}
+    value_template: '{% set home = states.sensor.n_people_home.state | int > 0 %}
+      {% set everyone_in_bed = ((states.sensor.n_people_home.state) <= (states.sensor.n_people_bed.state))
+      %} {% set current_time = now().strftime(''%T'') %}
 
-        {{ home and not(everyone_in_bed) and ( '09:00:00' < current_time < '20:00:00') }}
+      {{ home and not(everyone_in_bed) and ( ''09:00:00'' < current_time < ''20:00:00'')
+      }}
+
+      '
   action:
   - service: input_boolean.turn_off
     target:
@@ -369,7 +370,8 @@
   action:
   - service: light.turn_on
     data:
-      brightness_pct: '{{ [states.sensor.liquor_lights_brightness.state | float, 20] | min }}'
+      brightness_pct: '{{ [states.sensor.liquor_lights_brightness.state | float, 20]
+        | min }}'
     target:
       entity_id: light.liquor_lights
   - service: light.turn_off
@@ -433,7 +435,8 @@
   action:
   - service: light.turn_on
     data:
-      brightness_pct: '{{ [states.sensor.kitchen_counter_brightness.state | float, 50] | min }}'
+      brightness_pct: '{{ [states.sensor.kitchen_counter_brightness.state | float,
+        50] | min }}'
     target:
       entity_id: light.kitchen_counter_lights
   - service: light.turn_off
@@ -897,7 +900,6 @@
   - delay: 3
   - data: {}
     service: script.go_to_garbage
-    
 - id: '1660000199883'
   alias: Turn AC On
   trigger:
@@ -909,12 +911,11 @@
     data:
       hvac_mode: cool
     target:
-      entity_id: climate.bedroom_ac 
+      entity_id: climate.bedroom_ac
   - service: notify.mobile_app_graeme_pixel_6
     data:
       title: Time to turn on the Air Conditioner
       message: Get that room cool before bed!
-  
 - alias: Turn AC Off
   trigger:
   - entity_id: binary_sensor.ac_on
@@ -928,3 +929,67 @@
     data:
       title: Air conditioner turned off
       message: Should have happened automatically
+  id: 845f97d25c364478b962d678b3d9aef5
+- id: '1665694358043'
+  alias: SN Now Notification
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - media_player.android_tv
+    attribute: app_name
+    to: SNnow
+  condition: []
+  action:
+  - service: notify.mobile_app_graeme_pixel_6
+    data:
+      title: Sportsnet Now
+      message: "Sportsnet Now Controls"
+      data:
+        persistent: true # Set to true to create a persistent notification
+        tag: "SNNow" # Tag is required for the persistent notification
+        actions:
+        - action: SKIPCOM
+          title: Skip Commercial
+        - action: SKIPINT
+          title: Skip Intermission
+  mode: single
+- id: '1665694694119'
+  alias: Skip SNNow Commericals
+  trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: SKIPCOM
+  condition: []
+  action:
+#   - service: python_script.android_tv_skip
+#     data:
+#       n: 4
+  - service: notify.notify
+    data:
+      message: "Skip Commericals"
+  mode: single
+- alias: Skip SNNow Intermission
+  trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: SKIPINT
+  condition: []
+  action:
+#   - service: python_script.android_tv_skip
+#     data:
+#       n: 36
+  - service: notify.notify
+    data:
+      message: "Skip Intermission"
+  mode: single
+- alias: "Notify of Motion persistent remove"
+  trigger:
+  action:
+  - service: notify.mobile_app_graeme_pixel_6
+    data:
+      message: "clear_notification"
+      data:
+        tag: "SNNow"

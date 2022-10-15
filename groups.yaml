@@ -3,6 +3,7 @@ all_people:
   entities:
     - binary_sensor.carla_home
     - binary_sensor.graeme_home
+    - input_boolean.guest_mode
 
 main_area_lights:
   name: Main Area Lights
