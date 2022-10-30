@@ -146,12 +146,12 @@
       sequence:
       - service: script.loop_audio_inez_bedroom
         data:
-          title: Rain Sounds
-          file_name: rain_3600.mp3
+          title: Ocean Sounds
+          file_name: ocean_3600.mp3
           volume_level: 0.55
     - conditions: "{{ (now().hour >= 18 and states.media_player.inezs_speaker.state
         == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
-        | default(\"null\") == \"Rain Sounds\"\n}}\n"
+        | default(\"null\") == \"Ocean Sounds\"\n}}\n"
       sequence:
       - service: script.loop_audio_inez_bedroom
         data:
