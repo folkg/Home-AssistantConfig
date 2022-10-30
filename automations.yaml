@@ -96,9 +96,7 @@
       entity_id: light.bedroom_light
   - choose:
     - conditions: '{{ states.media_player.bedroom_assistant.attributes.media_title
-        | default("null") == "Rain Sounds" }}
-
-        '
+        | default("null") == "Rain Sounds" }}'
       sequence:
       - service: script.loop_audio_master_bedroom
         data:
@@ -159,7 +157,7 @@
         data:
           title: Lullaby
           file_name: lullaby.m4a
-          volume_level: 0.4
+          volume_level: 0.35
   id: d45848df75424e44b449b0b66cc48704
 - alias: Turn off Baby in Bed Inez Room
   trigger:
@@ -228,6 +226,13 @@
       }}
 
       '
+  condition:
+  - condition: state
+    entity_id: input_boolean.lights_out
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
   action:
   - service: input_boolean.turn_off
     target:
@@ -736,27 +741,6 @@
     entity_id: media_player.kitchen_speaker
     service: tts.google_translate_say
   mode: single
-- alias: Turn on Hallway Lights if Arriving with Media Playing
-  trigger:
-  - entity_id: binary_sensor.graeme_home
-    platform: state
-    to: 'on'
-  - entity_id: binary_sensor.carla_home
-    platform: state
-    to: 'on'
-  condition:
-  - condition: state
-    entity_id: group.main_area_bright
-    state: 'off'
-  - condition: or
-    conditions:
-    - condition: state
-      entity_id: media_player.sony_bravia
-      state: playing
-  action:
-  - service: light.turn_on
-    entity_id: light.hallway_lights
-  id: ad2d6f7628d54c9ca5a267ad477439dd
 - alias: Turn Everything off when Everyone Leaves
   trigger:
   - entity_id: group.all_people
@@ -932,28 +916,40 @@
   id: 845f97d25c364478b962d678b3d9aef5
 - id: '1665694358043'
   alias: SN Now Notification
-  description: ''
   trigger:
   - platform: state
     entity_id:
     - media_player.android_tv
-    attribute: app_name
-    to: SNnow
-  condition: []
+    attribute: app_id
+    to: 'com.rogers.sportsnet.sportsnet'
   action:
   - service: notify.mobile_app_graeme_pixel_6
     data:
       title: Sportsnet Now
-      message: "Sportsnet Now Controls"
+      message: Sportsnet Now Controls
       data:
-        persistent: true # Set to true to create a persistent notification
-        tag: "SNNow" # Tag is required for the persistent notification
+        sticky: true
+        persistent: true
+        tag: SNNow
         actions:
         - action: SKIPCOM
           title: Skip Commercial
         - action: SKIPINT
           title: Skip Intermission
   mode: single
+- alias: Remove SN Now Persistent Notification
+  trigger:
+  - platform: state
+    entity_id:
+    - media_player.android_tv
+    attribute: app_id
+    from: 'com.rogers.sportsnet.sportsnet'
+  action:
+  - service: notify.mobile_app_graeme_pixel_6
+    data:
+      message: clear_notification
+      data:
+        tag: SNNow
 - id: '1665694694119'
   alias: Skip SNNow Commericals
   trigger:
@@ -961,35 +957,17 @@
     event_type: mobile_app_notification_action
     event_data:
       action: SKIPCOM
-  condition: []
   action:
-#   - service: python_script.android_tv_skip
-#     data:
-#       n: 4
-  - service: notify.notify
+  - service: script.android_tv_skip
     data:
-      message: "Skip Commericals"
-  mode: single
+      count: 4
 - alias: Skip SNNow Intermission
   trigger:
   - platform: event
     event_type: mobile_app_notification_action
     event_data:
       action: SKIPINT
-  condition: []
   action:
-#   - service: python_script.android_tv_skip
-#     data:
-#       n: 36
-  - service: notify.notify
+  - service: script.android_tv_skip
     data:
-      message: "Skip Intermission"
-  mode: single
-- alias: "Notify of Motion persistent remove"
-  trigger:
-  action:
-  - service: notify.mobile_app_graeme_pixel_6
-    data:
-      message: "clear_notification"
-      data:
-        tag: "SNNow"
+      count: 42

@@ -7,7 +7,7 @@ logger:
 history:
 
 recorder:
-  purge_keep_days: 1
+  purge_keep_days: 7
 #  include:
 #    domains:
 #      - sensor
@@ -174,6 +174,71 @@ sensor:
       - sensor.living_room_temperature
       - sensor.bedroom_temperature
 
+  - platform: history_stats
+    name: Kitchen Motion Week
+    entity_id: binary_sensor.kitchen_motion
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Living Room Motion Week
+    entity_id: binary_sensor.living_room_motion
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Graeme Sleep Confidence
+    entity_id: sensor.pixel_6_sleep_confidence
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Carla Sleep Confidence
+    entity_id: sensor.carla_s_phone_sleep_confidence
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Graeme In Bed
+    entity_id: binary_sensor.graeme_in_bed
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Carla In Bed
+    entity_id: binary_sensor.carla_in_bed
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Graeme Keyguard
+    entity_id: binary_sensor.pixel_6_keyguard_locked
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+  - platform: history_stats
+    name: Carla Keyguard
+    entity_id: binary_sensor.carla_s_phone_keyguard_locked
+    state: "on"
+    type: time
+    end: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    duration:
+        days: 7
+
 binary_sensor:
   - platform: trend
     sensors:
@@ -195,8 +260,78 @@ binary_sensor:
     entity_id: sensor.kitchen_brightness
     upper: 200
     hysteresis: 50
+  - platform: bayesian
+    name: "graeme_in_bed_bayes"
+    prior: 0.3125 # 7.5 / 24 = 0.3125
+    probability_threshold: 0.90 # I am going to be using this sensor to turn out the lights so I only want to to activate when I am sure
+    observations:
+      - entity_id: sensor.pixel_6_sleep_confidence
+        platform: numeric_state
+        above: 85
+        prob_given_true: 0.90 # if I am asleep, this this sensor is above 85% x percent of time
+        prob_given_false: 0.06 # if I am awake, this this sensor is above 85% x percent of time
+      - platform: state
+        entity_id: sensor.pixel_6_charger_type
+        prob_given_true: 0.95 # if I am asleep, this this sensor is "ac" x percent of time
+        prob_given_false: 0.05 # if I am awake, this this sensor is "ac" x percent of time
+        to_state: "ac"
+      - platform: state
+        entity_id: binary_sensor.pixel_6_keyguard_locked
+        prob_given_true: 0.01 # if I am asleep, this this sensor is "on" x percent of the time
+        prob_given_false: 0.12 # if I am awake, this this sensor is "on" x percent of time
+        to_state: "on"
+      - platform: state
+        entity_id: binary_sensor.graeme_home
+        prob_given_true: 0.99 # if I am asleep, this this sensor is "on" all the time
+        prob_given_false: 0.5 # if I am awake, this this sensor is "on" x percent of time
+        to_state: "on"
+      - platform: state
+        entity_id: sensor.pixel_6_wifi_connection
+        prob_given_true: 0.01 # if I am asleep, I am never connected to school wifi
+        prob_given_false: 0.5 # if I am awake, I am connected to school wifi x percent of the time
+        to_state: "airuc-secure"
+  - platform: bayesian
+    name: "carla_in_bed_bayes"
+    prior: 0.3125 # 7.5 / 24 = 0.3125
+    probability_threshold: 0.90 # I am going to be using this sensor to turn out the lights so I only want to to activate when I am sure
+    observations:
+      - entity_id: sensor.carla_s_phone_sleep_confidence
+        platform: numeric_state
+        above: 80
+        prob_given_true: 0.85 # if Carla is asleep, this this sensor is above 80% x percent of time
+        prob_given_false: 0.15 # if Carla is awake, this this sensor is above 80% x percent of time
+      - platform: state
+        entity_id: sensor.carla_s_phone_charger_type
+        prob_given_true: 0.95 # if Carla is asleep, this this sensor is "ac" x percent of time
+        prob_given_false: 0.05 # if Carla is awake, this this sensor is "ac" x percent of time
+        to_state: "ac"
+      - platform: state
+        entity_id: binary_sensor.carla_s_phone_keyguard_locked
+        prob_given_true: 0.01 # if Carla is asleep, this this sensor is "on" x percent of the time
+        prob_given_false: 0.15 # if Carla is awake, this this sensor is "on" x percent of time
+        to_state: "on"
+      - platform: state
+        entity_id: binary_sensor.carla_home
+        prob_given_true: 0.99 # if Carla is asleep, this this sensor is "on" all the time
+        prob_given_false: 0.5 # if Carla is awake, this this sensor is "on" x percent of time
+        to_state: "on"
+      - platform: state
+        entity_id: sensor.carla_pixel_6_wifi_connection
+        prob_given_true: 0.01 # if Carla is asleep, Carla is never connected to school wifi
+        prob_given_false: 0.5 # if Carla is awake, Carla is connected to work wifi x percent of the time
+        to_state: "healthspot"
     
 template:
+  - sensor:
+      - name: "Graeme in bed probability"
+        unit_of_measurement: "%"
+        state: "{{state_attr('binary_sensor.graeme_in_bed_bayes', 'probability') * 100}}"
+
+  - sensor:
+      - name: "Carla in bed probability"
+        unit_of_measurement: "%"
+        state: "{{state_attr('binary_sensor.carla_in_bed_bayes', 'probability') * 100}}"
+
   - sensor:
       - name: "carla_home_away"
         unique_id: "carla_home_away"
@@ -295,31 +430,6 @@ template:
               {{ midea_outdoor_temp }}
             {% else %}
               {{ self }}
-            {% endif %}
-
-  - sensor:
-      - name: "AC On Time"
-        unique_id: "ac_on_time"
-        device_class: timestamp
-        state: >
-            {% set ac_on = states.binary_sensor.ac_on.state %}
-            {% set bedroom_temp = [states.sensor.midea_temperature.state | float(0), states.sensor.bedroom_temperature.state | float(0)] | max %}
-            {% set desired_temp = 21 | float %}
-            {% set bedtime = today_at("22:00") %}
-            {% set ac_off_time = today_at("06:15") %}
-
-            {% if ac_on == 'on' %}
-              {% set this = states.sensor.ac_on_time.state %}
-              {{ this }}
-            {% elif bedroom_temp < desired_temp %}
-              {{ None }}
-            {% elif now() > bedtime or now() < ac_off_time %}
-              {{ now() }}
-            {% else %}
-              {% set time_delta = 3.02 * (desired_temp ** 2 - bedroom_temp ** 2)
-                  - 177 * (desired_temp - bedroom_temp) %}
-              {% set ac_on_time = bedtime - timedelta(minutes=time_delta) %}
-              {{ ac_on_time }}
             {% endif %}
 
     # Kitchen Lights Setting
@@ -672,7 +782,7 @@ template:
             
             {{ ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (110 < sun_azimuth < 264)
+            or ( (110 < sun_azimuth < 264 and sun_elevation > 0)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
@@ -698,7 +808,7 @@ template:
             
             {{ ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
-            or ( (sun_azimuth > 195)
+            or ( (sun_azimuth > 195 and sun_elevation > 0)
                 and (sun_elevation < 40
                   or (main_area_temperature > 21 and outdoor_temperature > 10)
                 )
@@ -706,16 +816,6 @@ template:
         delay_off:
           minutes: 2
           seconds: 5
-
-      - name: "AC On"
-        state: >
-            {% set ac_on_time = as_datetime(states.sensor.ac_on_time.state) %}
-            {% set ac_off_time = (ac_on_time if ac_on_time not in ['unavailable','unknown'] else today_at("06:15") + timedelta(days=1)).replace(hour=6, minute=15) %}
-            {% set people_home = states.sensor.n_people_home.state | float(0) > 0 %}
-
-            {{people_home
-              and (ac_on_time != 'unknown')
-              and (ac_on_time < now() < ac_off_time)}}
 
         # Balcony lights purposely turning on when someone gets out of bed, even in the middle of the night. It's kind of nice.
       - name: "Balcony Lights On"

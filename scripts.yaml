@@ -39,22 +39,6 @@ merry_christmas:
       entity_id: media_player.spotify_graeme_folk
       media_content_id: 'https://open.spotify.com/playlist/37i9dQZF1DWTCHbho2Bfok'
 
-test_christmas_music:
-  sequence:
-  - service: media_player.select_source
-    data:
-      entity_id: media_player.spotify_graeme_folk
-      source: 'Man Cave Speaker'
-  - service: media_player.shuffle_set
-    data:
-      entity_id: media_player.spotify_graeme_folk
-      shuffle: true
-  - service: media_player.play_media
-    data:
-      media_content_type: playlist
-      entity_id: media_player.spotify_graeme_folk
-      media_content_id: 'https://open.spotify.com/playlist/37i9dQZF1DWTCHbho2Bfok'
-
 loop_audio_master_bedroom:
     alias: Loop Audio Master Bedroom
     sequence:
@@ -101,8 +85,7 @@ loop_audio_master_bedroom:
                   value_template: >-
                     {{ state_attr('media_player.bedroom_assistant', 'media_title') == title 
                     and is_state('media_player.bedroom_assistant', 'idle') }}
-              continue_on_timeout: false
-              timeout: '01:05:01'
+              timeout: '01:00:05'
     mode: restart
     icon: 'mdi:cast'
 
@@ -136,37 +119,37 @@ loop_audio_inez_bedroom:
                   value_template: >-
                     {{ state_attr('media_player.inezs_speaker', 'media_title') == title 
                     and is_state('media_player.inezs_speaker', 'idle') }}
-              continue_on_timeout: false
-              timeout: '01:05:01'
+              timeout: '01:00:05'
     mode: restart
     icon: 'mdi:cast'
 
-go_leafs_go:
-  alias: Go Leafs Go
-  description: 'Starts the Leafs game on the Android TV'
-  sequence:
-  - service: scene.turn_on
-    entity_id: scene.leafs_mode_main_area
-#   - service: androidtv.adb_command
-#     data:
-#       entity_id: media_player.sony_bravia
-#       command: "am start -a android.intent.action.VIEW -d -n com.nhl.gc1112.free/com.nhl.tv.launch.viewcontrollers.SplashActivity"
-
-go_flames_go:
-  alias: Go Flames Go
-  description: 'Starts the Flames game on the Android TV'
-  sequence:
-  - service: scene.turn_on
-    entity_id: scene.flames_mode_main_area
-
-get_tower_colours:
-  alias: Get Calgary Tower Colours
-  description: 'parses the Lighting Schedule calendar description for colour names'
-  fields:
-    calendar_description:
-      description: 'the full text of the event description'
-      example: 'We will mark this occasion with Blue and White lights.'
-  sequence:
+android_tv_skip:
+    mode: restart
+    sequence:
+      - service: androidtv.adb_command
+        target:
+          entity_id: media_player.android_tv
+        data:
+          command: >-
+            sendevent /dev/input/event0 1 113 1 && sendevent /dev/input/event0 0 0 0 &&
+            sendevent /dev/input/event0 1 113 0 && sendevent /dev/input/event0 0 0 0
+      - repeat:
+          count: "{{ count|int }}"
+          sequence:
+            - service: androidtv.adb_command
+              target:
+                entity_id: media_player.android_tv
+              data:
+                command: >-
+                  sendevent /dev/input/event0 1 208 1 && sendevent /dev/input/event0 0 0 0 &&
+                  sendevent /dev/input/event0 1 208 0 && sendevent /dev/input/event0 0 0 0
+      - service: androidtv.adb_command
+        target:
+          entity_id: media_player.android_tv
+        data:
+          command: >-
+            sendevent /dev/input/event0 1 113 1 && sendevent /dev/input/event0 0 0 0 &&
+            sendevent /dev/input/event0 1 113 0 && sendevent /dev/input/event0 0 0 0
 
 return_to_base:
     alias: Return to base
