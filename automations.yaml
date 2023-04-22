@@ -108,7 +108,7 @@
       data:
         title: Rain Sounds
         file_name: rain_3600.mp3
-        volume_level: 0.65
+        volume_level: 0.55
   id: eb11ff72ca924b92bd9f30aa6f7e5765
 - alias: Turn off Ambient Sounds in Master Bedroom
   trigger:
@@ -148,7 +148,7 @@
         data:
           title: Ocean Sounds
           file_name: ocean_3600.mp3
-          volume_level: 0.55
+          volume_level: 0.45
     - conditions: "{{ (now().hour >= 18 and states.media_player.inezs_speaker.state
         == 'off')\n    or states.media_player.inezs_speaker.attributes.media_title
         | default(\"null\") == \"Ocean Sounds\"\n}}\n"
@@ -226,6 +226,7 @@
       }}
 
       '
+     #todo: We want this to only affect one trigger (someone coming home). The other triggers should not depend on guest_mode.
   condition:
   - condition: state
     entity_id: input_boolean.lights_out
