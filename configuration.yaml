@@ -118,7 +118,7 @@ input_datetime:
     name: Stop Dimming Lights
     has_date: false
     has_time: true
-    initial: '21:00'
+    initial: '21:30'
   wakeup_time:
     name: Wakeup Time
     has_date: false
@@ -648,8 +648,8 @@ template:
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
             {% endif %}
 
-## TODO add wakeuptime + 4 hours, end time - 3 hours for 100%, down to 50% in between?
-      - name: "kitchen_table_brightness"
+## TODO remove old brightness if new one works well
+      - name: "kitchen_table_brightness_old"
         state: >
             {% set max_brightness = 60 %}
             {% set min_brightness = 0 %}
@@ -670,6 +670,35 @@ template:
                 {{ min_brightness }}
             {% else %}
                 {{(end_time - current_time) / (end_time - start_time) * (max_brightness - min_brightness) + min_brightness}}
+            {% endif %}
+
+      - name: "kitchen_table_brightness"
+        state: >
+            {% set morning_brightness = 100 %}
+            {% set mid_brightness = 30 %}
+            {% set evening_brightness = 55 %}
+            {% set min_brightness = 0 %}
+            
+            {% set evening_start_time = today_at(states.input_datetime.start_time.state) %}
+            {% set evening_end_time = today_at(states.input_datetime.end_time.state) %}
+            {% set wakeup_time = today_at(states.input_datetime.wakeup_time.state) %}
+            {% set morning_off_time = wakeup_time + timedelta(hours = 2.5) %}
+            {% set midday_time = (evening_start_time - morning_off_time) / 2 + morning_off_time %}
+            {% set current_time = now() %}
+            {% set guest_mode = states.input_boolean.guest_mode.state %}
+
+            {% if morning_off_time > current_time > wakeup_time %}
+                {{ morning_brightness }}
+            {% elif midday_time > current_time > morning_off_time %}
+                {{(midday_time - current_time) / (midday_time - morning_off_time) * (morning_brightness - mid_brightness) + mid_brightness}}
+            {% elif evening_start_time > current_time > midday_time %}
+                {{(evening_start_time - current_time) / (evening_start_time - midday_time) * -1*(evening_brightness - mid_brightness) + evening_brightness}}
+            {% elif guest_mode == "on" %}
+                {{ evening_brightness }}
+            {% elif evening_end_time > current_time > evening_start_time %}
+                {{(evening_end_time - current_time) / (evening_end_time - evening_start_time) * (evening_brightness - min_brightness) + min_brightness}}
+            {% else %}
+                {{ min_brightness }}
             {% endif %}
 
       - name: "liquor_lights_brightness"
@@ -779,14 +808,16 @@ template:
             {% set deactivate_theatre_mode = states.input_boolean.deactivate_theatre_mode.state %}
             {% set guest_mode = states.input_boolean.guest_mode.state %}
             {% set lights_out = states.input_boolean.lights_out.state %}
+            {% set ideapad_on = states.binary_sensor.ideapad_at_home.state %}
             
             {{ ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or ( (110 < sun_azimuth < 264 and sun_elevation > 0)
                 and (sun_elevation < 30
                     or (main_area_temperature > 21 and outdoor_temperature > 10)
-                )
-            ) }}
+                )) 
+            or ideapad_on == 'on'
+            }}
             
         delay_off:
           minutes: 2
@@ -864,6 +895,11 @@ template:
           {% set ha_app_phone_tracker = states.sensor.pixel_6_wifi_connection.state %}
 
           {{ unifi_phone_tracker == "home" or ha_app_phone_tracker == "TheInternet24G"  }}
+
+      - name: "Ideapad at Home"
+        state: >
+          {% set unifi_tracker = states.device_tracker.ideapad_laptop %}
+          {{ unifi_tracker == "home" }}
 
       - name: "Guest Mode"
         state: >
