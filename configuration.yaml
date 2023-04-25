@@ -97,8 +97,6 @@ input_boolean:
     name: 'Baby is in Bed Inezs Room'
     icon: mdi:baby
   lights_out:
-  ac_on:
-    name: 'AC On'
   guest_mode:
     name: 'Guest Mode'
     icon: mdi:wallet-travel
