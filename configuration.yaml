@@ -804,7 +804,8 @@ template:
             {% set lights_out = states.input_boolean.lights_out.state %}
             {% set ideapad_on = states.device_tracker.ideapad_laptop.state == 'home' %}
             
-            {{ ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
+            {{ (guest_mode == 'on' and lights_out == 'on')
+            or ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or (110 < sun_azimuth < 264 and sun_elevation > 0)
             or ideapad_on
@@ -825,7 +826,8 @@ template:
             {% set guest_mode = states.input_boolean.guest_mode.state %}
             {% set lights_out = states.input_boolean.lights_out.state %}
             
-            {{ ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
+            {{ (guest_mode == 'on' and lights_out == 'on')
+            or ((sun_elevation < -5 or current_time > start_time) and (guest_mode == 'off' or lights_out == 'on'))
             or (tv_media_state in ['idle','playing','paused'] and deactivate_theatre_mode == 'off')
             or (sun_azimuth > 195 and sun_elevation > 0)
             }}
